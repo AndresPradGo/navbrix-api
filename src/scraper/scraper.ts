@@ -1,9 +1,26 @@
 import puppeteer from 'puppeteer'
 import type {Browser, Page} from 'puppeteer'
+import utcDateTime from '../utils/utcDateTime';
+import extractSearchedPerformedDate from '../utils/extractSearchedPerformedDate';
+
+type ReportTypeOptions = 'METAR' | 'TAF' | 'Upper Wind' | 'SIGMET' | 'AIRMET' | 'PIREP'
 
 interface AerodromeWeatherRequest {
-    aerodromeCode: string;
-    reports: Set<'METAR' | 'TAF' | 'FDs' | 'GFA_Weather' | 'GFA_Ice' | 'SIGMET' | 'AIRMET' | 'PIREP'>
+    aerodromeCodes: string;
+    reports: Set<ReportTypeOptions>
+}
+
+interface WeatherReportReturnType {
+    aerodrome: string;
+    type: ReportTypeOptions;
+    data: string;
+    dateFrom?: Date;
+    dateTo? : Date
+}
+
+interface AerodromesWeatherReports {
+    date: Date;
+    reports: WeatherReportReturnType[];
 }
 
 class Scraper {
@@ -13,7 +30,7 @@ class Scraper {
     constructor() {}
 
     async init() {
-        this._browser = await puppeteer.launch({headless: false})
+        this._browser = await puppeteer.launch({headless: false, handleSIGINT: false})
         this._page = await this._browser.newPage()
         await this._page.goto('https://plan.navcanada.ca/wxrecall/')
         await this._resetReports()
@@ -21,19 +38,88 @@ class Scraper {
 
     async close() {await this._browser?.close()}
 
-    async scrape(): Promise<string | undefined> {
-        await this._addAerodrome('CYVR')
-        setTimeout(async() => {
-            await this._resetAerodromes()
-          }, 2000);
-        const content = await this._page?.content()
-        return content
+    async getAerodromeReports(request: AerodromeWeatherRequest): Promise<AerodromesWeatherReports> {
+        // Perform search
+        await this._setAerodromeSearch(request);
+        await this._search();
+
+        // Get date performed
+        const datePerformedContainer = await this._page?.waitForSelector(
+            'div.search-results >>>> div.row-fluid.search-query-info'
+        );
+        const datePerformedText = await datePerformedContainer?.$eval(
+            'div.span6',
+            (div) => div.textContent || ""
+        );
+        const datePerformed = extractSearchedPerformedDate(
+            datePerformedText || ""
+        ) || new Date((new Date()).toUTCString());  
+
+        // Get result table rows
+        const tableBody = await this._page?.waitForSelector(
+            'div.search-results >>>> table.table.table-striped >>>> tbody'
+        );
+        const tableRows = await tableBody?.$$('tr');
+
+        const reportsData = (await Promise.all(tableRows?.map(async (row, idx) => {
+            if (idx > 0) {
+                const tableCells = await row.$$('td');
+                if (tableCells.length === 2) {
+                    // Metadata: report type, aerodrome code
+                    const metadata = await tableCells[0].$('div');
+                    const reportType = await metadata?.$eval('div', div => (div.textContent as (ReportTypeOptions | null | undefined)));
+                    const aerodrome = await metadata?.$eval(
+                        reportType === "Upper Wind" ? 'div.location-description >>>> em' : 'div.location-description', 
+                        div => (div.textContent)
+                    )
+                    
+                    // Bulletin: report data, date-times
+                    const bulletin = await tableCells[1].$('div');
+                    const data = await bulletin?.$eval('pre', pre => (pre.textContent));
+                    const dateSpan = await bulletin?.$$eval(
+                        'div.datapanel-footer >>>> span',
+                        (spans) => {
+                            const dates = {
+                                from: "",
+                                to: ""
+                            };
+                            spans.forEach(span => {
+                                if (span.className === "start-validity")
+                                    dates.from = span.textContent || "";
+                                else if (span.className === "end-validity")
+                                    dates.to = span.textContent || "";
+                            });
+                            return dates;
+                        }
+                    );
+                    if (reportType && data && dateSpan) {
+                        return {
+                            aerodrome,
+                            type: reportType,
+                            data: data, 
+                            dateFrom: utcDateTime(dateSpan.from),
+                            dateTo: utcDateTime(dateSpan.to)
+                        } as WeatherReportReturnType
+                    } else return null
+                }
+                return null
+            }
+            return null
+        }) as Promise<WeatherReportReturnType | null>[])).filter(r => r !== null) as WeatherReportReturnType[]
+
+        await this._resetSearch();
+        return {
+            date: datePerformed,
+            reports: reportsData
+        }
     }
+
 
     async _search() {await this._page?.click('div.btn.btn-primary.search-button')}
 
+
     async _setAerodromeSearch (request: AerodromeWeatherRequest) {
-        await this._addAerodrome(request.aerodromeCode)
+        await this._addAerodrome(request.aerodromeCodes)
         await this._addReports(request.reports)
     }
 
@@ -41,16 +127,14 @@ class Scraper {
         await this._page?.type('div.react-tags__search-input >>>> input', `${aerodrome} `)
     }
 
-    async _addReports (reports: Set<'METAR' | 'TAF' | 'FDs' | 'GFA_Weather' | 'GFA_Ice' | 'SIGMET' | 'AIRMET' | 'PIREP'>) {
+    async _addReports (reports: Set<ReportTypeOptions>) {
         const checkboxIds = {
             SIGMET: "sigmet-toggle",
             AIRMET: "airmet-toggle",
             METAR: "metar-toggle",
             TAF: "taf-toggle",
             PIREP: "pirep-toggle",
-            FDs: "upperwind-toggle",
-            GFA_Weather: "graphicalForecast-gfaCldwx-toggle",
-            GFA_Ice: "graphicalForecast-gfaTurbc-toggle"
+            "Upper Wind": "upperwind-toggle",
         }
 
         for (const report of reports) {
