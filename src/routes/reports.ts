@@ -8,8 +8,8 @@ router.post('/', async (req, res) => {
     const scraper = new Scraper()
     await scraper.init()
     const content = await scraper.getAerodromeReports({
-        aerodromeCodes: 'CYVR CYXX',
-        reports: new Set(['METAR', 'TAF', 'Upper Wind'])
+        aerodromeCodes: 'CYVR CZBB CYXX CYYJ',
+        reports: new Set(['METAR', 'TAF', 'Upper Wind', 'AIRMET', 'SIGMET', 'PIREP'])
     })
     await scraper.close()
     return res.status(200).json({report: content})
