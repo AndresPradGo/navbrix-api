@@ -3,14 +3,15 @@ import type { Request, Response } from 'express'
 
 import Scraper from '../scraper/scraper';
 import validateRequest from '../middleware/validateRequest';
-import { reportRequestSchema, ReportRequestInput } from '../schemas/report.schema'
+import { reportRequestSchema, reportResposeBodySchema } from '../schemas/report.schema'
+import type { ReportRequestInput, ReportResponseBody } from '../schemas/report.schema'
 
 const router = express.Router()
 
 router.post(
     '/',
-    [validateRequest(reportRequestSchema)] , 
-    async (req: Request<{}, {}, ReportRequestInput>, res: Response<{}>) => {
+    [validateRequest(reportRequestSchema)], 
+    async (req: Request<{}, {}, ReportRequestInput>, res: Response<ReportResponseBody>) => {
         const scraper = new Scraper()
         await scraper.init()
         const content = await scraper.getAerodromeReports({
@@ -18,7 +19,7 @@ router.post(
             reports: new Set(['METAR', 'TAF', 'Upper Wind', 'AIRMET', 'SIGMET', 'PIREP'])
         })
         await scraper.close()
-        return res.status(200).json({report: content})
+        return res.status(200).json({})
     }
 )
 

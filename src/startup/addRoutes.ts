@@ -1,7 +1,7 @@
 import type {Express} from 'express'
 
-import briefings from '../routes/briefings'
-import reports from '../routes/reports'
+import briefings from '../routes/briefings.routes'
+import reports from '../routes/reports.routes'
 
 function addRoutes(app: Express) {
     app.use('/api/briefings', briefings);
