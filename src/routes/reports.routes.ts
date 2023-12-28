@@ -5,7 +5,7 @@ import Scraper from '../scraper/scraper';
 import validateRequest from '../middleware/validateRequest';
 import { reportRequestSchema, reportResposeBodySchema } from '../schemas/report.schema'
 import type { ReportRequestInput, ReportResponseBody } from '../schemas/report.schema'
-import preprocessReportsInput from '../utils/preprocessReportsInput';
+import Processor from '../scraper/processor';
 
 const router = express.Router()
 
@@ -13,7 +13,7 @@ router.post(
     '/',
     [validateRequest(reportRequestSchema)], 
     async (req: Request<{}, {}, ReportRequestInput>, res: Response<{}>) => {
-        const scraperInput = preprocessReportsInput(req.body)
+        const scraperInput = Processor.preprocessReportsInput(req.body)
         const scraper = new Scraper()
         await scraper.init()
         const reports = await scraper.getAerodromeReports(scraperInput)

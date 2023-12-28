@@ -5,7 +5,7 @@ import Scraper from '../scraper/scraper';
 import validateRequest from '../middleware/validateRequest';
 import { briefingRequestSchema } from '../schemas/briefing.schema'
 import type { BriefingRequestInput } from '../schemas/briefing.schema'
-import preprocessBriefingInput from '../utils/preprocessBriefingInput';
+import Processor from '../scraper/processor';
 
 
 const router = express.Router()
@@ -15,7 +15,7 @@ router.post(
     '/weather', 
     [validateRequest(briefingRequestSchema)],
     async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
-        const aerodromeCodes = preprocessBriefingInput(req.body)
+        const aerodromeCodes = Processor.preprocessBriefingInput(req.body)
         const scraper = new Scraper(3)
         await scraper.init()
         const reports = await scraper.getAerodromeReports({
@@ -33,7 +33,7 @@ router.post(
     '/notam', 
     [validateRequest(briefingRequestSchema)],
     async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
-        const aerodromeCodes = preprocessBriefingInput(req.body)
+        const aerodromeCodes = Processor.preprocessBriefingInput(req.body)
         const scraper = new Scraper()
         await scraper.init()
         const notams = await scraper.getNOTAMs(aerodromeCodes)
