@@ -18,6 +18,7 @@ router.post(
             aerodromeCodes: 'CYVR CZBB CYXX CYYJ',
             reports: new Set(['METAR', 'TAF', 'Upper Wind', 'AIRMET', 'SIGMET', 'PIREP'])
         })
+        const graphs = await scraper.getGFAs('CYVR CZBB CYXX CYZH')
         await scraper.close()
         return res.status(200).json({})
     }
