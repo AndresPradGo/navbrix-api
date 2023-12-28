@@ -14,8 +14,14 @@ router.post(
     '/weather', 
     [validateRequest(briefingRequestSchema)],
     async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
-    console.log('Weather biefings reached')
-    return res.status(200).json({briefing: "Weather"})
+        const scraper = new Scraper()
+        await scraper.init()
+        const content = await scraper.getAerodromeReports({
+            aerodromeCodes: 'CYVR CZBB CYXX CYYJ',
+            reports: new Set(['METAR', 'TAF', 'Upper Wind', 'AIRMET', 'SIGMET', 'PIREP'])
+        })
+        await scraper.close()
+    return res.status(200).json({briefing: content})
 })
 
 // POST: NOTAM briefing

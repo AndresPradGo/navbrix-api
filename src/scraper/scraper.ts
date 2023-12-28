@@ -85,55 +85,61 @@ class Scraper {
         const tableBody = await this._page?.waitForSelector(
             'div.search-results >>>> table.table.table-striped >>>> tbody'
         );
-        const tableRows = await tableBody?.$$('tr');
+        const tableRows = await tableBody?.$$('tr:not(.hidden)');
         
         // Map table rows to report-result objects
-        const reports = (await Promise.all(tableRows?.map(async (row, idx) => {
-            if (idx > 0) {
-                const tableCells = await row.$$('td');
-                if (tableCells.length === 2) {
-                    // Metadata: report type, aerodrome code
-                    const metadata = await tableCells[0].$('div');
-                    const reportType = await metadata?.$eval('div', div => (div.textContent as (ReportTypeOptions | null | undefined)));
-                    const aerodromes = ((await metadata?.$$eval(
-                        'div.location-description', 
-                        divs => (divs.map(div => div.textContent))
-                    ))?.filter((a) => a !== null) || []) as string[]
-                    
-                    // Bulletin: report data, date-times
-                    const bulletin = await tableCells[1].$('div');
-                    const data = await bulletin?.$eval('pre', pre => (pre.textContent));
-                    const dateSpan = await bulletin?.$$eval(
-                        'div.datapanel-footer >>>> span',
-                        (spans) => {
-                            const dates = {
-                                from: "",
-                                to: ""
-                            };
-                            spans.forEach(span => {
-                                if (span.className === "start-validity")
-                                    dates.from = span.textContent || "";
-                                else if (span.className === "end-validity")
-                                    dates.to = span.textContent || "";
-                            });
-                            return dates;
+        const reports = [] as WeatherReportReturnType[]
+        if (tableRows) {
+            for (let rowIndex = 0; rowIndex < tableRows.length; rowIndex++) {
+                if (rowIndex > 0) {
+                    const row = tableRows[rowIndex]
+                    const tableCells = await row.$$('td');
+                    if (tableCells.length === 2) {
+                        // Metadata: report type, aerodrome code
+                        const metadata = await tableCells[0].$('div');
+                        const reportType = await metadata?.$eval(
+                            'div', 
+                            div => (div.textContent as (ReportTypeOptions | null | undefined))
+                        );
+                        const aerodromes = ((await metadata?.$$eval(
+                            'div.location-description', 
+                            divs => (divs.map(div => div.textContent))
+                        ))?.filter((a) => a !== null) || []) as string[]
+                        
+                        // Bulletin: report data, date-times
+                        const bulletin = await tableCells[1].$('div');
+                        const data = await bulletin?.$eval('pre', pre => (pre.textContent));
+                        const dateSpan = await bulletin?.$$eval(
+                            'div.datapanel-footer >>>> span',
+                            (spans) => {
+                                const dates = {
+                                    from: "",
+                                    to: ""
+                                };
+                                spans.forEach(span => {
+                                    if (span.className === "start-validity")
+                                        dates.from = span.textContent || "";
+                                    else if (span.className === "end-validity")
+                                        dates.to = span.textContent || "";
+                                });
+                                return dates;
+                            }
+                        );
+                        if (reportType && data && dateSpan) {
+                            reports.push({
+                                aerodromes,
+                                type: reportType,
+                                data: data, 
+                                dateFrom: utcDateTime(dateSpan.from),
+                                dateTo: utcDateTime(dateSpan.to)
+                            } as WeatherReportReturnType)
                         }
-                    );
-                    if (reportType && data && dateSpan) {
-                        return {
-                            aerodromes,
-                            type: reportType,
-                            data: data, 
-                            dateFrom: utcDateTime(dateSpan.from),
-                            dateTo: utcDateTime(dateSpan.to)
-                        } as WeatherReportReturnType
-                    } else return null
+                    }
                 }
-                return null
             }
-            return null
-        }) as Promise<WeatherReportReturnType | null>[])).filter(r => r !== null) as WeatherReportReturnType[]
+        }
 
+        // Reset search and return
         await this._resetSearch();
         return {
             date: datePerformed,
@@ -253,54 +259,56 @@ class Scraper {
         const tableBody = await this._page?.waitForSelector(
             'div.search-results >>>> table.table.table-striped >>>> tbody'
         );
-        const tableRows = await tableBody?.$$('tr');
+        const tableRows = await tableBody?.$$('tr:not(.hidden)');
 
         // Map table rows to report-result objects
-        const reports = (await Promise.all(tableRows?.map(async (row, idx) => {
-            if (idx > 0) {
-                const tableCells = await row.$$('td');
-                if (tableCells.length === 2) {
-                    // Metadata: report type, aerodrome code
-                    const metadata = await tableCells[0].$('div');
-                    const aerodromes = ((await metadata?.$$eval(
-                        'div.location-description', 
-                        divs => (divs.map(div => div.textContent))
-                    ))?.filter((a) => a !== null) || []) as string[]
-                    
-                    // Bulletin: report data, suplements link,  date-times
-                    const bulletin = await tableCells[1].$('div');
-                    const data = await bulletin?.$eval('pre', pre => (pre.textContent));
-                    const suplementsLink = await bulletin?.$('a')
-                    const dateSpan = await bulletin?.$$eval(
-                        'div.datapanel-footer >>>> span',
-                        (spans) => {
-                            const dates = {
-                                from: "",
-                                to: ""
-                            };
-                            spans.forEach(span => {
-                                if (span.className === "start-validity")
-                                    dates.from = span.textContent || "";
-                                else if (span.className === "end-validity")
-                                    dates.to = span.textContent || "";
-                            });
-                            return dates;
+        const reports = [] as NotamReportReturnType[]
+        if (tableRows) {
+            for (let rowIndex = 0; rowIndex < tableRows.length; rowIndex++) {
+                if (rowIndex > 0) {
+                    const row = tableRows[rowIndex]
+                    const tableCells = await row.$$('td');
+                    if (tableCells.length === 2) {
+                        // Metadata: report type, aerodrome code
+                        const metadata = await tableCells[0].$('div');
+                        const aerodromes = ((await metadata?.$$eval(
+                            'div.location-description', 
+                            divs => (divs.map(div => div.textContent))
+                        ))?.filter((a) => a !== null) || []) as string[]
+                        
+                        // Bulletin: report data, suplements link,  date-times
+                        const bulletin = await tableCells[1].$('div');
+                        const data = await bulletin?.$eval('pre', pre => (pre.textContent));
+                        const suplementsLink = await bulletin?.$('a')
+                        const dateSpan = await bulletin?.$$eval(
+                            'div.datapanel-footer >>>> span',
+                            (spans) => {
+                                const dates = {
+                                    from: "",
+                                    to: ""
+                                };
+                                spans.forEach(span => {
+                                    if (span.className === "start-validity")
+                                        dates.from = span.textContent || "";
+                                    else if (span.className === "end-validity")
+                                        dates.to = span.textContent || "";
+                                });
+                                return dates;
+                            }
+                        );
+                        if (data && dateSpan) {
+                            reports.push({
+                                aerodromes,
+                                data: data, 
+                                dateFrom: utcDateTime(dateSpan.from),
+                                dateTo: utcDateTime(dateSpan.to),
+                                isSup: !!suplementsLink
+                            } as NotamReportReturnType)
                         }
-                    );
-                    if (data && dateSpan) {
-                        return {
-                            aerodromes,
-                            data: data, 
-                            dateFrom: utcDateTime(dateSpan.from),
-                            dateTo: utcDateTime(dateSpan.to),
-                            isSup: !!suplementsLink
-                        } as NotamReportReturnType
-                    } else return null
+                    }
                 }
-                return null
             }
-            return null
-        }) as Promise<NotamReportReturnType | null>[])).filter(r => r !== null) as NotamReportReturnType[]
+        }
 
         await this._resetSearch();
         return {
