@@ -5,9 +5,9 @@ import extractSearchedPerformedDate from '../utils/extractSearchedPerformedDate'
 import extractGFADateTime from '../utils/extractGFADateTime';
 
 
-type ReportTypeOptions = 'METAR' | 'TAF' | 'Upper Wind' | 'SIGMET' | 'AIRMET' | 'PIREP' | 'NOTAM'
+export type ReportTypeOptions = 'METAR' | 'TAF' | 'Upper Wind' | 'SIGMET' | 'AIRMET' | 'PIREP' | 'NOTAM'
 
-interface RequestType {
+export interface ReportsRequestType {
     aerodromeCodes: string;
     reports: Set<ReportTypeOptions>
 }
@@ -73,7 +73,7 @@ class Scraper {
 
     async close() {await this._browser?.close()}
 
-    async getAerodromeReports(request: RequestType): Promise<AerodromesWeatherReports> {
+    async getAerodromeReports(request: ReportsRequestType): Promise<AerodromesWeatherReports> {
         // Perform search
         await this._setAerodromeSearch(request);
         await this._search();
@@ -246,7 +246,6 @@ class Scraper {
         }
     }
 
-
     async getNOTAMs(aerodromeCodes: string): Promise<AerodromeNOTAMs> {
         // Perform search
         await this._setAerodromeSearch({aerodromeCodes, reports: new Set(['NOTAM'])});
@@ -323,7 +322,7 @@ class Scraper {
     async _search() {await this._page?.click('div.btn.btn-primary.search-button')}
 
 
-    async _setAerodromeSearch(request: RequestType) {
+    async _setAerodromeSearch(request: ReportsRequestType) {
         await this._addAerodrome(request.aerodromeCodes)
         await this._addReports(request.reports)
     }
