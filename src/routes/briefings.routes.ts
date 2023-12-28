@@ -16,7 +16,7 @@ router.post(
     [validateRequest(briefingRequestSchema)],
     async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
         const aerodromeCodes = preprocessBriefingInput(req.body)
-        const scraper = new Scraper()
+        const scraper = new Scraper(3)
         await scraper.init()
         const reports = await scraper.getAerodromeReports({
             aerodromeCodes,

@@ -54,8 +54,11 @@ interface AerodromeGFAs {
 class Scraper {
     _browser?: Browser;
     _page?: Page;
+    _METARHours: number;
 
-    constructor() {}
+    constructor(METARHours?: number) {
+        this._METARHours = METARHours === undefined || METARHours < 0 ? 0 : Math.max(METARHours, 6) 
+    }
 
     async init() {
         this._browser = await puppeteer.launch({headless: false, handleSIGINT: false})
@@ -368,7 +371,10 @@ class Scraper {
         await this._page?.waitForSelector('div.product-inputs >>>> div.product-input:nth-child(3) >>>> select[title="Notam Language"]')
         await this._page?.select('div.product-inputs >>>> div.product-input:nth-child(3) >>>> select[title="Notam Language"]', "english")
         await this._page?.waitForSelector('div.product-inputs >>>> div.product-input:nth-child(4) >>>> select[title="Historical Hours"]')
-        await this._page?.select('div.product-inputs >>>> div.product-input:nth-child(4) >>>> select[title="Historical Hours"]', "1")
+        await this._page?.select(
+            'div.product-inputs >>>> div.product-input:nth-child(4) >>>> select[title="Historical Hours"]', 
+            this._METARHours === 0 ? "" : `${this._METARHours}`
+        )
         await this._page?.waitForSelector('div.product-inputs >>>> div.product-input:nth-child(7) >>>> select[title="Historical Hours"]')
         await this._page?.select('div.product-inputs >>>> div.product-input:nth-child(7) >>>> select[title="Historical Hours"]', "low")
         for (const checkboxId of checkboxIds) {
