@@ -52,12 +52,12 @@ interface AerodromeGFAs {
 
 // Scraper is in charge of scraping the Nav-Canada website and returning the raw data
 class Scraper {
-    _browser?: Browser;
-    _page?: Page;
-    _METARHours: number;
+    private _browser?: Browser;
+    private _page?: Page;
+    private _METARHours: number;
 
     constructor(METARHours?: number) {
-        this._METARHours = METARHours === undefined || METARHours < 0 ? 0 : Math.max(METARHours, 6) 
+        this._METARHours = METARHours === undefined || METARHours < 0 ? 0 : Math.min(METARHours, 6) 
     }
 
     async init() {
@@ -212,7 +212,7 @@ class Scraper {
 
                             if (btnIndex > 0 && btn) {
                                 await btn.click()
-                                await new Promise(r => setTimeout(r, 100));
+                                await new Promise(r => setTimeout(r, 500));
                             }
 
                             const imgContainer = await graphContent?.waitForSelector(
@@ -322,25 +322,25 @@ class Scraper {
 
     }
 
-    async _search() {await this._page?.click('div.btn.btn-primary.search-button')}
+    private async _search() {await this._page?.click('div.btn.btn-primary.search-button')}
 
 
-    async _setAerodromeSearch(request: ReportsRequestType) {
+    private async  _setAerodromeSearch(request: ReportsRequestType) {
         await this._addAerodrome(request.aerodromeCodes)
         await this._addReports(request.reports)
     }
 
-    async _setGFASearch(aerodromes: string) {
+    private async _setGFASearch(aerodromes: string) {
         await this._addAerodrome(aerodromes)
         await this._page?.click(`input[type="checkbox"][id="graphicalForecast-gfaCldwx-toggle"]`)
         await this._page?.click(`input[type="checkbox"][id="graphicalForecast-gfaTurbc-toggle"]`)
     }
 
-    async _addAerodrome(aerodromes: string) {
+    private async _addAerodrome(aerodromes: string) {
         await this._page?.type('div.react-tags__search-input >>>> input', `${aerodromes} `)
     }
 
-    async _addReports (reports: Set<ReportTypeOptions>) {
+    private async _addReports (reports: Set<ReportTypeOptions>) {
         const checkboxIds = {
             SIGMET: "sigmet-toggle",
             AIRMET: "airmet-toggle",
@@ -356,7 +356,7 @@ class Scraper {
         }
     }
 
-    async _resetSearch() {
+    private async _resetSearch() {
         const checkboxIds = [
             "sigmet-toggle",
             "airmet-toggle",
@@ -383,7 +383,7 @@ class Scraper {
 
     }
 
-    async _getDatePerformed (): Promise<Date> {
+    private async _getDatePerformed (): Promise<Date> {
         const datePerformedContainer = await this._page?.waitForSelector(
             'div.search-results >>>> div.row-fluid.search-query-info'
         );

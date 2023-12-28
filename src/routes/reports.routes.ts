@@ -12,13 +12,13 @@ const router = express.Router()
 router.post(
     '/',
     [validateRequest(reportRequestSchema)], 
-    async (req: Request<{}, {}, ReportRequestInput>, res: Response<ReportResponseBody>) => {
+    async (req: Request<{}, {}, ReportRequestInput>, res: Response<{}>) => {
         const scraperInput = preprocessReportsInput(req.body)
         const scraper = new Scraper()
         await scraper.init()
         const reports = await scraper.getAerodromeReports(scraperInput)
         await scraper.close()
-        return res.status(200).json({})
+        return res.status(200).json({reports})
     }
 )
 
