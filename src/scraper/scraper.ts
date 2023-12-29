@@ -12,7 +12,7 @@ export interface ReportsRequestType {
     reports: Set<ReportTypeOptions>
 }
 
-interface WeatherReportReturnType {
+export interface WeatherReportReturnType {
     aerodromes: string[];
     type: ReportTypeOptions;
     data: string;
@@ -28,7 +28,7 @@ interface NotamReportReturnType {
     isSup: boolean;
 }
 
-interface AerodromesWeatherReports {
+export interface AerodromesWeatherReports {
     date: Date;
     reports: WeatherReportReturnType[];
 }

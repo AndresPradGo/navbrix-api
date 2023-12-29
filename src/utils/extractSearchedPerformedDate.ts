@@ -1,4 +1,3 @@
-import utcDateTime from './utcDateTime';
 
 const extractSearchedPerformedDate = (rawText: string): (Date | null) => {
     const textContent = rawText.trim();

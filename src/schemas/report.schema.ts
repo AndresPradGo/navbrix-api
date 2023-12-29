@@ -86,5 +86,6 @@ export const reportResposeBodySchema = z.object ({
 })
 
 // Types
+export type BaseReportRequest = z.infer<typeof baseReportRequestSchema>;
 export type ReportRequestInput = z.infer<typeof reportRequestBodySchema>;
 export type ReportResponseBody = z.infer<typeof reportResposeBodySchema>;

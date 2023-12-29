@@ -16,8 +16,9 @@ router.post(
         const scraperInput = Processor.preprocessReportsInput(req.body)
         const scraper = new Scraper()
         await scraper.init()
-        const reports = await scraper.getAerodromeReports(scraperInput)
+        const scrapedData = await scraper.getAerodromeReports(scraperInput)
         await scraper.close()
+        const reports = Processor.postprocessorRreportOutput(req.body, scrapedData)
         return res.status(200).json({reports})
     }
 )
