@@ -23,6 +23,7 @@ export interface WeatherReportReturnType {
     aerodromes: string[];
     type: ReportType;
     data: string;
+    geometryWarning?: boolean;
     dateFrom?: Date;
     dateTo? : Date
 }
@@ -109,6 +110,13 @@ class Scraper {
             for (let rowIndex = 0; rowIndex < tableRows.length; rowIndex++) {
                 if (rowIndex > 0) {
                     const row = tableRows[rowIndex]
+                    let geometryWarning = false;
+                    row.$eval(
+                        'strong', 
+                        item => {
+                            if (item.textContent?.includes("This product may contain invalid or unknown geometry"))
+                                geometryWarning = true
+                        })
                     const tableCells = await row.$$('td');
                     if (tableCells.length === 2) {
                         // Metadata: report type, aerodrome code
@@ -146,6 +154,7 @@ class Scraper {
                                 aerodromes,
                                 type: reportType,
                                 data: data, 
+                                geometryWarning,
                                 dateFrom: utcDateTime(dateSpan.from),
                                 dateTo: utcDateTime(dateSpan.to)
                             } as WeatherReportReturnType)
