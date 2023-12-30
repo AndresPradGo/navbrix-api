@@ -5,16 +5,23 @@ import extractSearchedPerformedDate from '../utils/extractSearchedPerformedDate'
 import extractGFADateTime from '../utils/extractGFADateTime';
 
 
-export type ReportTypeOptions = 'METAR' | 'TAF' | 'Upper Wind' | 'SIGMET' | 'AIRMET' | 'PIREP' | 'NOTAM'
+export type ReportType = 'METAR' | 'TAF' | 'Upper Wind' | 'SIGMET' | 'AIRMET' | 'PIREP' | 'NOTAM'
 
+export type GFARegion = 'Pacific (GFACN31)'
+    | 'Prairies (GFACN32)' 
+    | 'Pacific (GFACN33)' 
+    | 'Ontario & Quebec (GFACN34)'
+    | 'Yukon & NWT (GFACN35)' 
+    | 'Nunavut (GFACN36)' 
+    | 'Arctic (GFACN37)'
 export interface ReportsRequestType {
     aerodromeCodes: string;
-    reports: Set<ReportTypeOptions>
+    reports: Set<ReportType>
 }
 
 export interface WeatherReportReturnType {
     aerodromes: string[];
-    type: ReportTypeOptions;
+    type: ReportType;
     data: string;
     dateFrom?: Date;
     dateTo? : Date
@@ -38,14 +45,20 @@ interface AerodromeNOTAMs {
     reports: NotamReportReturnType[];
 }
 
+export interface GFAGraph {
+    src: string; 
+    validAt: Date; 
+    hoursSpan: number;
+}
+
 interface GFAReturnType {
     aerodromes: string[];
     type: string;
     region: string;
-    graphs: {src: string, validAt: Date, hoursSpan: number}[];
+    graphs: GFAGraph[];
 }
 
-interface AerodromeGFAs {
+export interface AerodromeGFAs {
     date: Date;
     gfas: GFAReturnType[];
 }
@@ -102,7 +115,7 @@ class Scraper {
                         const metadata = await tableCells[0].$('div');
                         const reportType = await metadata?.$eval(
                             'div', 
-                            div => (div.textContent as (ReportTypeOptions | null | undefined))
+                            div => (div.textContent as (ReportType | null | undefined))
                         );
                         const aerodromes = ((await metadata?.$$eval(
                             'div.location-description', 
@@ -233,7 +246,7 @@ class Scraper {
                         graphs.push({
                             aerodromes,
                             type: titleSections[1].trim(),
-                            region: titleSections[2].trim(),
+                            region: titleSections[2].trim() as GFARegion,
                             graphs: graphsResults
                         } as GFAReturnType)
                     }
@@ -340,7 +353,7 @@ class Scraper {
         await this._page?.type('div.react-tags__search-input >>>> input', `${aerodromes} `)
     }
 
-    private async _addReports (reports: Set<ReportTypeOptions>) {
+    private async _addReports (reports: Set<ReportType>) {
         const checkboxIds = {
             SIGMET: "sigmet-toggle",
             AIRMET: "airmet-toggle",

@@ -20,7 +20,7 @@ router.post(
         if (
             !isUtcDateFuture(req.body.departure.dateTime) ||
             !isUtcDateFuture(req.body.arrival.dateTime) ||
-            !!req.body.diversionOptions.find(i => (!isUtcDateFuture(i.dateTime))) ||
+            !isUtcDateFuture(req.body.diversionOptions.dateTime) ||
             !!req.body.legs.find(leg => (!isUtcDateFuture(leg.dateTime))) 
         ) return res.status(400).json('Flight must be in the future.')
         
@@ -30,7 +30,7 @@ router.post(
         await scraper.init()
         const reports = await scraper.getAerodromeReports({
             aerodromeCodes,
-            reports: new Set(['METAR', 'TAF', 'Upper Wind', 'AIRMET', 'SIGMET', 'PIREP'])
+            reports: new Set(['METAR', 'TAF', 'AIRMET', 'SIGMET', 'PIREP'])
         })
         const gfas = await scraper.getGFAs(aerodromeCodes)
         await scraper.close()
@@ -49,7 +49,7 @@ router.post(
         if (
             !isUtcDateFuture(req.body.departure.dateTime) ||
             !isUtcDateFuture(req.body.arrival.dateTime) ||
-            !!req.body.diversionOptions.find(i => (!isUtcDateFuture(i.dateTime))) ||
+            !isUtcDateFuture(req.body.diversionOptions.dateTime) ||
             !!req.body.legs.find(leg => (!isUtcDateFuture(leg.dateTime))) 
         ) return res.status(400).json('Flight must be in the future.')
         
@@ -59,7 +59,7 @@ router.post(
         await scraper.init()
         const notams = await scraper.getNOTAMs(aerodromeCodes)
         await scraper.close()
-        
+
         // Return response
         return res.status(200).json({})
     }

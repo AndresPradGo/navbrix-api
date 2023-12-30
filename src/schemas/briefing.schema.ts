@@ -12,6 +12,7 @@ const aerodromeRequestSchema = z.object({
         .regex(/^[-A-Za-z0-9']+$/, {
             message: "Only letters, numbers and symbols -'",
         }),
+    ifPartOfFlightPlan: z.boolean(),
     nauticalMilesFromPath: z
         .number({ 
             invalid_type_error: "Distance from path must be a number",
@@ -47,7 +48,7 @@ const briefingRequestBodySchema = z.object ({
     departure: departureArrivalAerodromeSchema,
     legs: z.array(briefingRequestBaseSchema),
     arrival: departureArrivalAerodromeSchema,
-    diversionOptions: z.array(briefingRequestBaseSchema),
+    diversionOptions: briefingRequestBaseSchema,
 })
 
 export const briefingRequestSchema = z.object({
