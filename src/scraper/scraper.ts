@@ -30,7 +30,7 @@ export interface WeatherReportReturnType {
     dateTo? : Date
 }
 
-interface NotamReportReturnType {
+export interface NotamReportReturnType {
     aerodromes: string[];
     data: string;
     dateFrom?: Date;
@@ -43,7 +43,7 @@ export interface AerodromesWeatherReports {
     reports: WeatherReportReturnType[];
 }
 
-interface AerodromeNOTAMs {
+export interface AerodromeNOTAMs {
     date: Date;
     reports: NotamReportReturnType[];
 }

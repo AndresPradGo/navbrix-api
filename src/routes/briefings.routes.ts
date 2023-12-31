@@ -41,7 +41,7 @@ router.post(
 
 
         // Return response
-        return res.status(200).json({aerodromeBriefings, enrouteBriefings})
+        return res.status(200).json({})
     }
 )
 
@@ -64,6 +64,9 @@ router.post(
         await scraper.init()
         const notams = await scraper.getNOTAMs(aerodromeCodes)
         await scraper.close()
+        
+        // Process scraped data
+        const processedNotams = Processor.postprocessNotams(req.body, notams)
 
         // Return response
         return res.status(200).json({})

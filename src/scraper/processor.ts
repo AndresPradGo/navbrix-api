@@ -7,7 +7,9 @@ import type {
   WeatherReportReturnType,
   GFARegion,
   GFAGraph,
-  AerodromeGFAs
+  AerodromeGFAs,
+  NotamReportReturnType,
+  AerodromeNOTAMs
 } from './scraper'
 import utcDateTime from '../utils/utcDateTime';
 
@@ -90,6 +92,12 @@ interface BaseEnrouteBriefingPostProcessData {
 interface EnrouteBriefingPostProcessData {
   dateTime: Date;
   briefings: BaseEnrouteBriefingPostProcessData[]
+}
+
+interface NOTAMsPostProcessData {
+  dateTime: Date;
+  aipSuplementNotams: NotamReportReturnType[];
+  notams: NotamReportReturnType[];
 }
 
 // Processor class has static methods to proces input and output data from the scraper
@@ -297,13 +305,27 @@ class Processor {
   ): EnrouteBriefingPostProcessData {
     const postprocessedData: BaseEnrouteBriefingPostProcessData[] = []
     const regions = new Set(scrapedGFAs.gfas.map(gfa => gfa.region))
-    const AIRMETs = scrapedReports.reports.filter(item => item.type === 'AIRMET')
-    const SIGMETs = scrapedReports.reports.filter(item => item.type === 'SIGMET')
-    const PIREPs = scrapedReports.reports.filter(item => item.type === 'PIREP') 
+    const eta = utcDateTime(request.arrival.dateTime) || new Date()
+    const etaPlus2 = new Date(eta.getTime())
+    etaPlus2.setHours(eta.getHours() + 2)
+    const etd = utcDateTime(request.departure.dateTime) || new Date()
+    const etdMinus2 = new Date(etd.getTime())
+    etdMinus2.setHours(etd.getHours() - 2)
+    const AIRMETs = scrapedReports.reports.filter(item => (
+      item.type === 'AIRMET' &&
+      !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
+    ))
+    const SIGMETs = scrapedReports.reports.filter(item => (
+      item.type === 'SIGMET' &&
+      !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
+    ))
+    const PIREPs = scrapedReports.reports.filter(item => (
+      item.type === 'PIREP' &&
+      !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
+    )) 
     const aerodromesData = [{
       code: request.departure.aerodrome,
       dateTimeAt: utcDateTime(request.departure.dateTime),
-      isPartOfFlightPlan: true,
       isDiversionOption: false, 
       nauticalMilesFromPath: 0
     }]
@@ -311,7 +333,6 @@ class Processor {
       aerodromesData.push({
         code: aerodrome.code,
         dateTimeAt: utcDateTime(leg.dateTime),
-        isPartOfFlightPlan: aerodrome.isPartOfFlightPlan,
         isDiversionOption: false,
         nauticalMilesFromPath: aerodrome.nauticalMilesFromPath
       })
@@ -319,24 +340,15 @@ class Processor {
     aerodromesData.concat(request.diversionOptions.aerodromes.map(aerodrome => ({
       code: aerodrome.code,
       dateTimeAt: utcDateTime(request.diversionOptions.dateTime),
-      isPartOfFlightPlan: false,
       isDiversionOption: true,
       nauticalMilesFromPath: aerodrome.nauticalMilesFromPath
     })))
     aerodromesData.push({
       code: request.arrival.aerodrome,
       dateTimeAt: utcDateTime(request.arrival.dateTime),
-      isPartOfFlightPlan: true,
       isDiversionOption: false, 
       nauticalMilesFromPath: 0
     })
-
-    const eta = utcDateTime(request.arrival.dateTime) || new Date()
-    const etaPlus2 = new Date(eta.getTime())
-    etaPlus2.setHours(eta.getHours() + 2)
-    const etd = utcDateTime(request.departure.dateTime) || new Date()
-    const etdMinus2 = new Date(etd.getTime())
-    etdMinus2.setHours(etd.getHours() - 2)
     
     for (const region of regions) {
       let weatherGraphs: GFAGraph[] = []
@@ -352,17 +364,13 @@ class Processor {
         }
       });
       const airmets = AIRMETs.filter(
-        item => (
-          item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) &&
-          !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
-        )
+        item => item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) 
       ).map(item => {
         const aerodromes = item.aerodromes.map(a => {
           const aerodrome = aerodromesData.find(aerodromeData => aerodromeData.code === a)
           return ({
             code: a,
             nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
-            isPartOfFlight: !!aerodrome?.isPartOfFlightPlan,
             isDiversionOption: !!aerodrome?.isDiversionOption 
           }) || []
         })
@@ -376,17 +384,13 @@ class Processor {
         } as BaseEnrouteBriefingResult)
       }) as BaseEnrouteBriefingResult[]
       const sigmets = SIGMETs.filter(
-        item => (
-          item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) &&
-          !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
-        )
+        item => item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) 
       ).map(item => {
         const aerodromes = item.aerodromes.map(a => {
           const aerodrome = aerodromesData.find(aerodromeData => aerodromeData.code === a)
           return ({
             code: a,
             nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
-            isPartOfFlight: !!aerodrome?.isPartOfFlightPlan,
             isDiversionOption: !!aerodrome?.isDiversionOption 
           }) || []
         })
@@ -400,17 +404,13 @@ class Processor {
         } as BaseEnrouteBriefingResult)
       }) as BaseEnrouteBriefingResult[]
       const pireps = PIREPs.filter(
-        item => (
-          item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) &&
-          !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
-        )
+        item => item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) 
       ).map(item => {
         const aerodromes = item.aerodromes.map(a => {
           const aerodrome = aerodromesData.find(aerodromeData => aerodromeData.code === a)
           return ({
             code: a,
             nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
-            isPartOfFlight: !!aerodrome?.isPartOfFlightPlan,
             isDiversionOption: !!aerodrome?.isDiversionOption 
           }) || []
         })
@@ -449,6 +449,36 @@ class Processor {
 
     return {dateTime: scrapedReports.date, briefings: postprocessedData}
   }
+
+
+  static postprocessNotams (
+    request: BriefingRequestInput,
+    scrapedNotams: AerodromeNOTAMs,
+  ): NOTAMsPostProcessData {
+    const eta = utcDateTime(request.arrival.dateTime) || new Date()
+    const etaPlus2 = new Date(eta.getTime())
+    etaPlus2.setHours(eta.getHours() + 2)
+    const etd = utcDateTime(request.departure.dateTime) || new Date()
+    const etdMinus2 = new Date(etd.getTime())
+    etdMinus2.setHours(etd.getHours() - 2)
+    const notams = scrapedNotams.reports.filter(notam => (
+      !notam.isSup &&
+      !((notam.dateFrom && etaPlus2 < notam.dateFrom) || (notam.dateTo && notam.dateTo < etdMinus2))
+    )).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
+    const aipSuplementNotams = scrapedNotams.reports.filter(notam => (
+      !notam.isSup &&
+      !((notam.dateFrom && etaPlus2 < notam.dateFrom) || (notam.dateTo && notam.dateTo < etdMinus2))
+    )).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
+    
+    const postProcessedNotams: NOTAMsPostProcessData = {
+      dateTime: scrapedNotams.date,
+      aipSuplementNotams,
+      notams
+    }
+
+    return postProcessedNotams
+  }
+
 
   private static _filterReports(
     reportRequest: BaseReportRequest, 
