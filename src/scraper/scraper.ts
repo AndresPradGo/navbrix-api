@@ -14,6 +14,8 @@ export type GFARegion = 'Pacific (GFACN31)'
     | 'Yukon & NWT (GFACN35)' 
     | 'Nunavut (GFACN36)' 
     | 'Arctic (GFACN37)'
+
+type GFAType = 'Clouds & Weather' | 'Icing, Turbulence & Freezing level'
 export interface ReportsRequestType {
     aerodromeCodes: string;
     reports: Set<ReportType>
@@ -54,8 +56,8 @@ export interface GFAGraph {
 
 interface GFAReturnType {
     aerodromes: string[];
-    type: string;
-    region: string;
+    type: GFAType;
+    region: GFARegion;
     graphs: GFAGraph[];
 }
 
@@ -111,12 +113,14 @@ class Scraper {
                 if (rowIndex > 0) {
                     const row = tableRows[rowIndex]
                     let geometryWarning = false;
-                    row.$eval(
-                        'strong', 
-                        item => {
-                            if (item.textContent?.includes("This product may contain invalid or unknown geometry"))
-                                geometryWarning = true
-                        })
+                    try {
+                        await row.$eval(
+                            'strong', 
+                            item => {
+                                if (item.textContent?.includes("This product may contain invalid or unknown geometry"))
+                                    geometryWarning = true
+                            })
+                    } catch (_){}
                     const tableCells = await row.$$('td');
                     if (tableCells.length === 2) {
                         // Metadata: report type, aerodrome code

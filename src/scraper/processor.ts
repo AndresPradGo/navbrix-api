@@ -5,6 +5,9 @@ import type {
   ReportType, 
   AerodromesWeatherReports, 
   WeatherReportReturnType,
+  GFARegion,
+  GFAGraph,
+  AerodromeGFAs
 } from './scraper'
 import utcDateTime from '../utils/utcDateTime';
 
@@ -32,6 +35,18 @@ interface BaseAerodromeBriefingResult {
   }[]
 }
 
+interface BaseEnrouteBriefingResult {
+  aerodromes: {
+    code: string;
+    nauticalMilesFromTarget: number;
+    isPartOfFlight: boolean;
+    isDiversionOption: boolean;
+  }[]
+  dateFrom: Date;
+  dateTo?: Date
+  data: string;
+  geometryWarning?: boolean;
+}
 
 interface AerodromeReportPostProcessData {
   taf: BaseReportResult[]
@@ -61,6 +76,21 @@ interface AerodromeBriefingPostProcessData {
   diversionOptions: BaseAerodromeBriefingResult[]
 }
 
+interface BaseEnrouteBriefingPostProcessData {
+  region: GFARegion;
+  dateFrom: Date;
+  dateTo: Date;
+  weatherGraphs: GFAGraph[];
+  iceGraphs: GFAGraph[];
+  airmets: BaseEnrouteBriefingResult[];
+  sigmets: BaseEnrouteBriefingResult[];
+  pireps: BaseEnrouteBriefingResult[]
+}
+
+interface EnrouteBriefingPostProcessData {
+  dateTime: Date;
+  briefings: BaseEnrouteBriefingPostProcessData[]
+}
 
 // Processor class has static methods to proces input and output data from the scraper
 class Processor {
@@ -166,6 +196,8 @@ class Processor {
     const TAFs = scrapedData.reports.filter(item => item.type === 'TAF')
     const METARs = scrapedData.reports.filter(item => item.type === 'METAR')
 
+    
+
     const departureTaf = Processor._findReportByDate(
       TAFs.filter(taf => !!taf.aerodromes.find(a => a.includes(request.departure.aerodrome))),
       utcDateTime(request.departure.dateTime)
@@ -174,7 +206,7 @@ class Processor {
       TAFs.filter(taf => !!taf.aerodromes.find(a => a.includes(request.arrival.aerodrome))),
       utcDateTime(request.arrival.dateTime)
     )
-
+    
     const postprocessedData:AerodromeBriefingPostProcessData  = {
       dateTime: scrapedData.date,
       departure: {
@@ -258,6 +290,166 @@ class Processor {
 
   }
 
+  static postprocessEnrouteBriefingOutput (
+    request: BriefingRequestInput,
+    scrapedReports: AerodromesWeatherReports,
+    scrapedGFAs: AerodromeGFAs
+  ): EnrouteBriefingPostProcessData {
+    const postprocessedData: BaseEnrouteBriefingPostProcessData[] = []
+    const regions = new Set(scrapedGFAs.gfas.map(gfa => gfa.region))
+    const AIRMETs = scrapedReports.reports.filter(item => item.type === 'AIRMET')
+    const SIGMETs = scrapedReports.reports.filter(item => item.type === 'SIGMET')
+    const PIREPs = scrapedReports.reports.filter(item => item.type === 'PIREP') 
+    const aerodromesData = [{
+      code: request.departure.aerodrome,
+      dateTimeAt: utcDateTime(request.departure.dateTime),
+      isPartOfFlightPlan: true,
+      isDiversionOption: false, 
+      nauticalMilesFromPath: 0
+    }]
+    request.legs.forEach(leg => leg.aerodromes.forEach(aerodrome => {
+      aerodromesData.push({
+        code: aerodrome.code,
+        dateTimeAt: utcDateTime(leg.dateTime),
+        isPartOfFlightPlan: aerodrome.isPartOfFlightPlan,
+        isDiversionOption: false,
+        nauticalMilesFromPath: aerodrome.nauticalMilesFromPath
+      })
+    }));
+    aerodromesData.concat(request.diversionOptions.aerodromes.map(aerodrome => ({
+      code: aerodrome.code,
+      dateTimeAt: utcDateTime(request.diversionOptions.dateTime),
+      isPartOfFlightPlan: false,
+      isDiversionOption: true,
+      nauticalMilesFromPath: aerodrome.nauticalMilesFromPath
+    })))
+    aerodromesData.push({
+      code: request.arrival.aerodrome,
+      dateTimeAt: utcDateTime(request.arrival.dateTime),
+      isPartOfFlightPlan: true,
+      isDiversionOption: false, 
+      nauticalMilesFromPath: 0
+    })
+
+    const eta = utcDateTime(request.arrival.dateTime) || new Date()
+    const etaPlus2 = new Date(eta.getTime())
+    etaPlus2.setHours(eta.getHours() + 2)
+    const etd = utcDateTime(request.departure.dateTime) || new Date()
+    const etdMinus2 = new Date(etd.getTime())
+    etdMinus2.setHours(etd.getHours() - 2)
+    
+    for (const region of regions) {
+      let weatherGraphs: GFAGraph[] = []
+      let iceGraphs: GFAGraph[] = []
+      let aerodromes: string[] = []
+      scrapedGFAs.gfas.forEach(item => {
+        if (item.region === region) {
+          aerodromes = item.aerodromes
+          if (item.type === 'Clouds & Weather')
+            weatherGraphs = item.graphs
+          if (item.type === 'Icing, Turbulence & Freezing level')
+            iceGraphs = item.graphs
+        }
+      });
+      const airmets = AIRMETs.filter(
+        item => (
+          item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) &&
+          !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
+        )
+      ).map(item => {
+        const aerodromes = item.aerodromes.map(a => {
+          const aerodrome = aerodromesData.find(aerodromeData => aerodromeData.code === a)
+          return ({
+            code: a,
+            nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
+            isPartOfFlight: !!aerodrome?.isPartOfFlightPlan,
+            isDiversionOption: !!aerodrome?.isDiversionOption 
+          }) || []
+        })
+
+        return ({
+          aerodromes,
+          data: item.data,
+          dateFrom: item.dateFrom || new Date(),
+          dateTo: item.dateTo,
+          geometryWarning: item.geometryWarning
+        } as BaseEnrouteBriefingResult)
+      }) as BaseEnrouteBriefingResult[]
+      const sigmets = SIGMETs.filter(
+        item => (
+          item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) &&
+          !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
+        )
+      ).map(item => {
+        const aerodromes = item.aerodromes.map(a => {
+          const aerodrome = aerodromesData.find(aerodromeData => aerodromeData.code === a)
+          return ({
+            code: a,
+            nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
+            isPartOfFlight: !!aerodrome?.isPartOfFlightPlan,
+            isDiversionOption: !!aerodrome?.isDiversionOption 
+          }) || []
+        })
+
+        return ({
+          aerodromes,
+          data: item.data,
+          dateFrom: item.dateFrom || new Date(),
+          dateTo: item.dateTo,
+          geometryWarning: item.geometryWarning
+        } as BaseEnrouteBriefingResult)
+      }) as BaseEnrouteBriefingResult[]
+      const pireps = PIREPs.filter(
+        item => (
+          item.aerodromes.some(value => aerodromes.find(a => value.includes(a))) &&
+          !((item.dateFrom && etaPlus2 < item.dateFrom) || (item.dateTo && item.dateTo < etdMinus2))
+        )
+      ).map(item => {
+        const aerodromes = item.aerodromes.map(a => {
+          const aerodrome = aerodromesData.find(aerodromeData => aerodromeData.code === a)
+          return ({
+            code: a,
+            nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
+            isPartOfFlight: !!aerodrome?.isPartOfFlightPlan,
+            isDiversionOption: !!aerodrome?.isDiversionOption 
+          }) || []
+        })
+
+        return ({
+          aerodromes,
+          data: item.data,
+          dateFrom: item.dateFrom || new Date(),
+          dateTo: item.dateTo,
+          geometryWarning: item.geometryWarning
+        } as BaseEnrouteBriefingResult)
+      }) as BaseEnrouteBriefingResult[]
+
+      const aerodromesInGFA = aerodromesData.filter(
+        a => aerodromes.find(code => code === a.code)
+      ) 
+      
+      const dateFrom = aerodromesInGFA.length > 0 
+        ? aerodromesInGFA[0].dateTimeAt || utcDateTime(request.departure.dateTime) || new Date()
+        : utcDateTime(request.departure.dateTime) || new Date()
+      const dateTo = aerodromesInGFA.length > 1 
+        ? aerodromesInGFA[aerodromesInGFA.length - 1].dateTimeAt || utcDateTime(request.arrival.dateTime) || new Date()
+        : utcDateTime(request.arrival.dateTime) || new Date()
+
+      postprocessedData.push({
+        region,
+        weatherGraphs,
+        iceGraphs,
+        airmets,
+        sigmets,
+        pireps,
+        dateFrom,
+        dateTo,
+      })
+    }
+
+    return {dateTime: scrapedReports.date, briefings: postprocessedData}
+  }
+
   private static _filterReports(
     reportRequest: BaseReportRequest, 
     reports: WeatherReportReturnType[], 
@@ -294,9 +486,9 @@ class Processor {
     })
 
     return (
-      filteredReports.length === 0 
-      ? {report: reportList[0], within: false} : filteredReports.length === 0 
-      ? {report: filteredReports[0], within: true} : undefined
+      filteredReports.length !== 0 
+      ? {report: filteredReports[0], within: true} : reportList.length !== 0 
+      ? {report: reportList[0], within: false} : undefined
     )
   }
 }

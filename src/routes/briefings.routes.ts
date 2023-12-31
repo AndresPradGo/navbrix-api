@@ -35,8 +35,13 @@ router.post(
         const gfas = await scraper.getGFAs(aerodromeCodes)
         await scraper.close()
 
+        // Process scraped data
+        const aerodromeBriefings = Processor.postprocessAerodromeBriefingOutput(req.body, reports)
+        const enrouteBriefings = Processor.postprocessEnrouteBriefingOutput(req.body, reports, gfas)
+
+
         // Return response
-        return res.status(200).json({})
+        return res.status(200).json({aerodromeBriefings, enrouteBriefings})
     }
 )
 
