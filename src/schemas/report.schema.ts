@@ -42,8 +42,17 @@ const reportRequestBodySchema = z.object ({
     landingWeather:  aerodromeReportRequestSchema.optional(),
 })
 
+const reportParamsSquema = z.object({
+    flightId: z
+        .string()
+        .regex(/^[1-9]\d*$/, {
+            message: "Flight ID must be a round number greather than zero.",
+          }),
+  })
+
 export const reportRequestSchema = z.object({
-  body: reportRequestBodySchema
+  body: reportRequestBodySchema,
+  params: reportParamsSquema
 })
 
 // Post Report response schemas
@@ -81,11 +90,12 @@ const baseReportResponseSchema = z.object({
 
 export const reportResposeBodySchema = z.object ({
     takeoffWeather: baseReportResponseSchema.optional(),
-    enrouteWeather: baseReportResponseSchema.optional(),
+    enrouteWeather: z.array(baseReportResponseSchema).optional(),
     landingWeather:  baseReportResponseSchema.optional(),
 })
 
 // Types
 export type BaseReportRequest = z.infer<typeof baseReportRequestSchema>;
+export type ReportRequestParams = z.infer<typeof reportParamsSquema>
 export type ReportRequestInput = z.infer<typeof reportRequestBodySchema>;
 export type ReportResponseBody = z.infer<typeof reportResposeBodySchema>;

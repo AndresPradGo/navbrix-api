@@ -4,16 +4,16 @@ import type { Request, Response } from 'express'
 import Scraper from '../scraper/scraper';
 import validateRequest from '../middleware/validateRequest';
 import { reportRequestSchema, reportResposeBodySchema } from '../schemas/report.schema'
-import type { ReportRequestInput, ReportResponseBody } from '../schemas/report.schema'
+import type { ReportRequestParams, ReportRequestInput, ReportResponseBody } from '../schemas/report.schema'
 import Processor from '../scraper/processor';
 import isUtcDateFuture from '../utils/isUtcDateFuture';
 
 const router = express.Router()
 
 router.post(
-    '/',
+    '/:flightId',
     [validateRequest(reportRequestSchema)], 
-    async (req: Request<{}, {}, ReportRequestInput>, res: Response<{}>) => {
+    async (req: Request<ReportRequestParams, {}, ReportRequestInput>, res: Response<{}>) => {
         // Check flight is in the future
         if (
             req.body.takeoffWeather && !isUtcDateFuture(req.body.takeoffWeather.dateTime) ||

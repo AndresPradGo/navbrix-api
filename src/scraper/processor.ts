@@ -8,7 +8,6 @@ import type {
   GFARegion,
   GFAGraph,
   AerodromeGFAs,
-  NotamReportReturnType,
   AerodromeNOTAMs
 } from './scraper'
 import utcDateTime from '../utils/utcDateTime';
@@ -51,11 +50,13 @@ interface BaseEnrouteBriefingResult {
 }
 
 interface AerodromeReportPostProcessData {
+  dateTimeAt: Date;
   taf: BaseReportResult[]
   metar: BaseReportResult[]
 }
 
 interface EnrouteReportPostProcessData {
+  dateTimeAt: Date;
   upperwind: BaseReportResult[]
   metar: BaseReportResult[]
 }
@@ -69,12 +70,18 @@ interface WeatherReportPostProcessData {
 
 interface AerodromeBriefingPostProcessData {
   dateTime: Date;
-  departure: BaseAerodromeBriefingResult
+  departure: {
+    dateTimeAt: Date
+    aerodrome: BaseAerodromeBriefingResult
+  }
   legs: {
-    dateTime: Date;
+    dateTimeAt: Date;
     aerodromes: BaseAerodromeBriefingResult[]
   }[]
-  arrival: BaseAerodromeBriefingResult
+  arrival: {
+    dateTimeAt: Date
+    aerodrome: BaseAerodromeBriefingResult
+  }
   diversionOptions: BaseAerodromeBriefingResult[]
 }
 
@@ -92,6 +99,17 @@ interface BaseEnrouteBriefingPostProcessData {
 interface EnrouteBriefingPostProcessData {
   dateTime: Date;
   briefings: BaseEnrouteBriefingPostProcessData[]
+}
+
+interface NotamReportReturnType {
+  aerodromes: {
+    code: string
+    dateTimeAt: Date
+    flightWithinNotam: boolean
+  }[];
+  data: string;
+  dateFrom?: Date;
+  dateTo? : Date;
 }
 
 interface NOTAMsPostProcessData {
@@ -161,6 +179,7 @@ class Processor {
 
     if (request.takeoffWeather !== undefined) {
       const takeoffData: AerodromeReportPostProcessData = {
+        dateTimeAt: utcDateTime(request.takeoffWeather?.dateTime) || new Date(),
         taf: request.takeoffWeather.taf.map(tafRequest => (
           Processor._filterReports(tafRequest, TAFs, utcDateTime(request.takeoffWeather?.dateTime))
         )),
@@ -172,6 +191,7 @@ class Processor {
     }
     if (request.landingWeather !== undefined) {
       const landingData: AerodromeReportPostProcessData = {
+        dateTimeAt: utcDateTime(request.landingWeather?.dateTime) || new Date(),
         taf: request.landingWeather.taf.map(tafRequest => (
           Processor._filterReports(tafRequest, TAFs, utcDateTime(request.landingWeather?.dateTime))
         )),
@@ -183,6 +203,7 @@ class Processor {
     }
     if (request.enrouteWeather) {
       const enrouteData: EnrouteReportPostProcessData[] = request.enrouteWeather.map(leg => ({
+        dateTimeAt: utcDateTime(leg.dateTime) || new Date(),
         upperwind: leg.upperwind.map(tafRequest => (
           Processor._filterReports(tafRequest, upperWinds, utcDateTime(leg.dateTime))
         )),
@@ -218,22 +239,25 @@ class Processor {
     const postprocessedData:AerodromeBriefingPostProcessData  = {
       dateTime: scrapedData.date,
       departure: {
-        aerodromeCode: request.departure.aerodrome,
-        nauticalMilesFromTarget: 0,
-        taf: departureTaf ? {
-          data: departureTaf.report.data,
-          dateFrom: departureTaf.report.dateFrom || new Date(),
-          dateTo : departureTaf.report.dateTo || new Date(),
-          flightWithinForecast: departureTaf.within,
-        } : undefined,
-        metar: METARs.filter(
-          metar => metar.aerodromes.find(a => a.includes(request.departure.aerodrome))
-        ).map(metar => ({data: metar.data, date: metar.dateFrom || new Date()})).sort(
-          (a, b) => (b.date && a.date ? b.date.getTime() - a.date.getTime() : 0)
-        )
+        dateTimeAt: utcDateTime(request.departure?.dateTime) || new Date(),
+        aerodrome: {
+          aerodromeCode: request.departure.aerodrome,
+          nauticalMilesFromTarget: 0,
+          taf: departureTaf ? {
+            data: departureTaf.report.data,
+            dateFrom: departureTaf.report.dateFrom || new Date(),
+            dateTo : departureTaf.report.dateTo || new Date(),
+            flightWithinForecast: departureTaf.within,
+          } : undefined,
+          metar: METARs.filter(
+            metar => metar.aerodromes.find(a => a.includes(request.departure.aerodrome))
+          ).map(metar => ({data: metar.data, date: metar.dateFrom || new Date()})).sort(
+            (a, b) => (b.date && a.date ? b.date.getTime() - a.date.getTime() : 0)
+          )
+        }
       },
       legs: request.legs.map(leg => ({
-        dateTime: utcDateTime(leg.dateTime) || new Date(),
+        dateTimeAt: utcDateTime(leg.dateTime) || new Date(),
         aerodromes: leg.aerodromes.map(aerodrome => {
           const aerodromeTaf = Processor._findReportByDate(
             TAFs.filter(taf => !!taf.aerodromes.find(tafAerodrome => tafAerodrome.includes(aerodrome.code))),
@@ -257,19 +281,22 @@ class Processor {
         }) 
       })),
       arrival: {
-        aerodromeCode: request.arrival.aerodrome,
-        nauticalMilesFromTarget: 0,
-        taf: arrivalTaf ? {
-          data: arrivalTaf.report.data,
-          dateFrom: arrivalTaf.report.dateFrom || new Date(),
-          dateTo : arrivalTaf.report.dateTo || new Date(),
-          flightWithinForecast: arrivalTaf.within,
-        } : undefined,
-        metar: METARs.filter(
-          metar => metar.aerodromes.find(a => a.includes(request.arrival.aerodrome))
-        ).map(metar => ({data: metar.data, date: metar.dateFrom || new Date()})).sort(
-          (a, b) => (b.date && a.date ? b.date.getTime() - a.date.getTime() : 0)
-        )
+        dateTimeAt: utcDateTime(request.arrival?.dateTime) || new Date(),
+        aerodrome: {
+          aerodromeCode: request.arrival.aerodrome,
+          nauticalMilesFromTarget: 0,
+          taf: arrivalTaf ? {
+            data: arrivalTaf.report.data,
+            dateFrom: arrivalTaf.report.dateFrom || new Date(),
+            dateTo : arrivalTaf.report.dateTo || new Date(),
+            flightWithinForecast: arrivalTaf.within,
+          } : undefined,
+          metar: METARs.filter(
+            metar => metar.aerodromes.find(a => a.includes(request.arrival.aerodrome))
+          ).map(metar => ({data: metar.data, date: metar.dateFrom || new Date()})).sort(
+            (a, b) => (b.date && a.date ? b.date.getTime() - a.date.getTime() : 0)
+          )
+        }
       },
       diversionOptions: request.diversionOptions.aerodromes.map(aerodrome => {
         const aerodromeTaf = Processor._findReportByDate(
@@ -464,11 +491,59 @@ class Processor {
     const notams = scrapedNotams.reports.filter(notam => (
       !notam.isSup &&
       !((notam.dateFrom && etaPlus2 < notam.dateFrom) || (notam.dateTo && notam.dateTo < etdMinus2))
-    )).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
+    )).map(notam => {
+
+      const aerodromes = notam.aerodromes.map(code => {
+
+        const dateTimeAt = (code.includes(request.departure.aerodrome) ? utcDateTime(request.departure.dateTime) 
+          : code.includes(request.arrival.aerodrome) ? utcDateTime(request.arrival.dateTime) 
+          : !!request.diversionOptions.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.diversionOptions.dateTime)
+          : utcDateTime(request.legs.find(leg => !!leg.aerodromes.find(a => code.includes(a.code)))?.dateTime)) || new Date()
+        
+        const flightWithinNotam = !((notam.dateFrom && dateTimeAt < notam.dateFrom) || (notam.dateTo && notam.dateTo < dateTimeAt))
+
+        return {
+          code: code,
+          dateTimeAt,
+          flightWithinNotam
+        }
+      })
+
+      return {
+        aerodromes,
+        data: notam.data,
+        dateFrom: notam.dateFrom,
+        dateTo: notam.dateTo,
+      }
+    }).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
     const aipSuplementNotams = scrapedNotams.reports.filter(notam => (
       !notam.isSup &&
       !((notam.dateFrom && etaPlus2 < notam.dateFrom) || (notam.dateTo && notam.dateTo < etdMinus2))
-    )).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
+    )).map(notam => {
+
+      const aerodromes = notam.aerodromes.map(code => {
+
+        const dateTimeAt = (code.includes(request.departure.aerodrome) ? utcDateTime(request.departure.dateTime) 
+          : code.includes(request.arrival.aerodrome) ? utcDateTime(request.arrival.dateTime) 
+          : !!request.diversionOptions.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.diversionOptions.dateTime)
+          : utcDateTime(request.legs.find(leg => !!leg.aerodromes.find(a => code.includes(a.code)))?.dateTime)) || new Date()
+        
+        const flightWithinNotam = !((notam.dateFrom && dateTimeAt < notam.dateFrom) || (notam.dateTo && notam.dateTo < dateTimeAt))
+
+        return {
+          code: code,
+          dateTimeAt,
+          flightWithinNotam
+        }
+      })
+
+      return {
+        aerodromes,
+        data: notam.data,
+        dateFrom: notam.dateFrom,
+        dateTo: notam.dateTo,
+      }
+    }).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
     
     const postProcessedNotams: NOTAMsPostProcessData = {
       dateTime: scrapedNotams.date,
