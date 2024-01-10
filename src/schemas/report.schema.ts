@@ -92,6 +92,8 @@ export const reportResposeBodySchema = z.object ({
     takeoffWeather: baseReportResponseSchema.optional(),
     enrouteWeather: z.array(baseReportResponseSchema).optional(),
     landingWeather:  baseReportResponseSchema.optional(),
+    allWeatherIsOfficial: z.boolean(),
+    weatherHoursFromETD: z.number().min(-1)
 })
 
 // Types
