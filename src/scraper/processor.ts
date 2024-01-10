@@ -41,7 +41,7 @@ interface BaseEnrouteBriefingResult {
     code: string;
     nauticalMilesFromTarget: number;
     isPartOfFlight: boolean;
-    isDiversionOption: boolean;
+    isAlternate: boolean;
   }[]
   dateFrom: Date;
   dateTo?: Date
@@ -82,7 +82,7 @@ interface AerodromeBriefingPostProcessData {
     dateTimeAt: Date
     aerodrome: BaseAerodromeBriefingResult
   }
-  diversionOptions: BaseAerodromeBriefingResult[]
+  alternates: BaseAerodromeBriefingResult[]
 }
 
 interface BaseEnrouteBriefingPostProcessData {
@@ -159,7 +159,7 @@ class Processor {
     request.legs.forEach(item => {
         item.aerodromes.forEach(a => aerodromesList.add(a.code));
     });
-    request.diversionOptions.aerodromes.forEach(a => aerodromesList.add(a.code));
+    request.alternates.aerodromes.forEach(a => aerodromesList.add(a.code));
 
     return Array.from(aerodromesList).join(" ")
   }
@@ -298,7 +298,7 @@ class Processor {
           )
         }
       },
-      diversionOptions: request.diversionOptions.aerodromes.map(aerodrome => {
+      alternates: request.alternates.aerodromes.map(aerodrome => {
         const aerodromeTaf = Processor._findReportByDate(
           TAFs.filter(taf => !!taf.aerodromes.find(tafAerodrome => tafAerodrome.includes(aerodrome.code))),
           utcDateTime(request.arrival.dateTime)
@@ -353,27 +353,27 @@ class Processor {
     const aerodromesData = [{
       code: request.departure.aerodrome,
       dateTimeAt: utcDateTime(request.departure.dateTime),
-      isDiversionOption: false, 
+      isAlternate: false, 
       nauticalMilesFromPath: 0
     }]
     request.legs.forEach(leg => leg.aerodromes.forEach(aerodrome => {
       aerodromesData.push({
         code: aerodrome.code,
         dateTimeAt: utcDateTime(leg.dateTime),
-        isDiversionOption: false,
+        isAlternate: false,
         nauticalMilesFromPath: aerodrome.nauticalMilesFromPath
       })
     }));
-    aerodromesData.concat(request.diversionOptions.aerodromes.map(aerodrome => ({
+    aerodromesData.concat(request.alternates.aerodromes.map(aerodrome => ({
       code: aerodrome.code,
-      dateTimeAt: utcDateTime(request.diversionOptions.dateTime),
-      isDiversionOption: true,
+      dateTimeAt: utcDateTime(request.alternates.dateTime),
+      isAlternate: true,
       nauticalMilesFromPath: aerodrome.nauticalMilesFromPath
     })))
     aerodromesData.push({
       code: request.arrival.aerodrome,
       dateTimeAt: utcDateTime(request.arrival.dateTime),
-      isDiversionOption: false, 
+      isAlternate: false, 
       nauticalMilesFromPath: 0
     })
     
@@ -398,7 +398,7 @@ class Processor {
           return ({
             code: a,
             nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
-            isDiversionOption: !!aerodrome?.isDiversionOption 
+            isAlternate: !!aerodrome?.isAlternate 
           }) || []
         })
 
@@ -418,7 +418,7 @@ class Processor {
           return ({
             code: a,
             nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
-            isDiversionOption: !!aerodrome?.isDiversionOption 
+            isAlternate: !!aerodrome?.isAlternate 
           }) || []
         })
 
@@ -438,7 +438,7 @@ class Processor {
           return ({
             code: a,
             nauticalMilesFromTarget: aerodrome? aerodrome.nauticalMilesFromPath : 0,
-            isDiversionOption: !!aerodrome?.isDiversionOption 
+            isAlternate: !!aerodrome?.isAlternate 
           }) || []
         })
 
@@ -497,7 +497,7 @@ class Processor {
 
         const dateTimeAt = (code.includes(request.departure.aerodrome) ? utcDateTime(request.departure.dateTime) 
           : code.includes(request.arrival.aerodrome) ? utcDateTime(request.arrival.dateTime) 
-          : !!request.diversionOptions.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.diversionOptions.dateTime)
+          : !!request.alternates.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.alternates.dateTime)
           : utcDateTime(request.legs.find(leg => !!leg.aerodromes.find(a => code.includes(a.code)))?.dateTime)) || new Date()
         
         const flightWithinNotam = !((notam.dateFrom && dateTimeAt < notam.dateFrom) || (notam.dateTo && notam.dateTo < dateTimeAt))
@@ -525,7 +525,7 @@ class Processor {
 
         const dateTimeAt = (code.includes(request.departure.aerodrome) ? utcDateTime(request.departure.dateTime) 
           : code.includes(request.arrival.aerodrome) ? utcDateTime(request.arrival.dateTime) 
-          : !!request.diversionOptions.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.diversionOptions.dateTime)
+          : !!request.alternates.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.alternates.dateTime)
           : utcDateTime(request.legs.find(leg => !!leg.aerodromes.find(a => code.includes(a.code)))?.dateTime)) || new Date()
         
         const flightWithinNotam = !((notam.dateFrom && dateTimeAt < notam.dateFrom) || (notam.dateTo && notam.dateTo < dateTimeAt))

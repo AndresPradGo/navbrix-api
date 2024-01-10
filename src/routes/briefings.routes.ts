@@ -20,7 +20,7 @@ router.post(
         if (
             !isUtcDateFuture(req.body.departure.dateTime) ||
             !isUtcDateFuture(req.body.arrival.dateTime) ||
-            !isUtcDateFuture(req.body.diversionOptions.dateTime) ||
+            !isUtcDateFuture(req.body.alternates.dateTime) ||
             !!req.body.legs.find(leg => (!isUtcDateFuture(leg.dateTime))) 
         ) return res.status(400).json('Flight must be in the future.')
         
@@ -54,7 +54,7 @@ router.post(
         if (
             !isUtcDateFuture(req.body.departure.dateTime) ||
             !isUtcDateFuture(req.body.arrival.dateTime) ||
-            !isUtcDateFuture(req.body.diversionOptions.dateTime) ||
+            !isUtcDateFuture(req.body.alternates.dateTime) ||
             !!req.body.legs.find(leg => (!isUtcDateFuture(leg.dateTime))) 
         ) return res.status(400).json('Flight must be in the future.')
         

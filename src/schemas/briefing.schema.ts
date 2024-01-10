@@ -47,7 +47,7 @@ const briefingRequestBodySchema = z.object ({
     departure: departureArrivalAerodromeSchema,
     legs: z.array(briefingRequestBaseSchema),
     arrival: departureArrivalAerodromeSchema,
-    diversionOptions: briefingRequestBaseSchema,
+    alternates: briefingRequestBaseSchema,
 })
 
 export const briefingRequestSchema = z.object({
