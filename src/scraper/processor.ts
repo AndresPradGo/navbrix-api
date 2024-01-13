@@ -182,10 +182,10 @@ class Processor {
         dateTimeAt: utcDateTime(request.takeoffWeather?.dateTime) || new Date(),
         taf: request.takeoffWeather.taf.map(tafRequest => (
           Processor._filterReports(tafRequest, TAFs, utcDateTime(request.takeoffWeather?.dateTime))
-        )),
+        )).filter(report => report !== undefined) as BaseReportResult[],
         metar: request.takeoffWeather.metar.map(metarRequest => (
           Processor._filterReports(metarRequest, METARs, utcDateTime(request.takeoffWeather?.dateTime))
-        )),
+        )).filter(report => report !== undefined) as BaseReportResult[],
       }
       postprocessedData.takeoffWeather = takeoffData
     }
@@ -194,10 +194,10 @@ class Processor {
         dateTimeAt: utcDateTime(request.landingWeather?.dateTime) || new Date(),
         taf: request.landingWeather.taf.map(tafRequest => (
           Processor._filterReports(tafRequest, TAFs, utcDateTime(request.landingWeather?.dateTime))
-        )),
+        )).filter(report => report !== undefined) as BaseReportResult[],
         metar: request.landingWeather.metar.map(metarRequest => (
           Processor._filterReports(metarRequest, METARs, utcDateTime(request.landingWeather?.dateTime))
-        )),
+        )).filter(report => report !== undefined) as BaseReportResult[],
       }
       postprocessedData.landingWeather = landingData
     }
@@ -206,10 +206,10 @@ class Processor {
         dateTimeAt: utcDateTime(leg.dateTime) || new Date(),
         upperwind: leg.upperwind.map(tafRequest => (
           Processor._filterReports(tafRequest, upperWinds, utcDateTime(leg.dateTime))
-        )),
+        )).filter(report => report !== undefined) as BaseReportResult[],
         metar: leg.metar.map(metarRequest => (
           Processor._filterReports(metarRequest, METARs, utcDateTime(leg.dateTime))
-        )),
+        )).filter(report => report !== undefined) as BaseReportResult[],
       }))
       postprocessedData.enrouteWeather = enrouteData
     }
@@ -559,18 +559,22 @@ class Processor {
     reportRequest: BaseReportRequest, 
     reports: WeatherReportReturnType[], 
     date?: Date
-  ): BaseReportResult {
+  ): BaseReportResult | undefined {
     const report = Processor._findReportByDate(
       reports.filter(t => !!t.aerodromes.find(a => a.includes(reportRequest.aerodromeCode))), 
       date
-    ) as {report: WeatherReportReturnType, within: boolean}
-    return {
-      ...reportRequest,
-      data: report.report.data,
-      dateFrom: report.report.dateFrom,
-      dateTo: report.report.dateTo,
-      flightWithinForecast: report.within
-    } as BaseReportResult
+    ) as {report: WeatherReportReturnType, within: boolean} | undefined
+
+    if (report) {
+      return {
+        ...reportRequest,
+        data: report.report.data,
+        dateFrom: report.report.dateFrom,
+        dateTo: report.report.dateTo,
+        flightWithinForecast: report.within
+      } as BaseReportResult
+    }
+    return undefined
   }
 
   private static _findReportByDate(
