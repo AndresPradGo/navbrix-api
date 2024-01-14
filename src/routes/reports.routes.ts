@@ -36,21 +36,43 @@ router.post(
         
         const landingWinds = processedData.landingWeather?.taf.map(taf => {
             return {
-                processed: taf,
-                interpreted: Interpreter.extractWindFromTAF(
+                aerodrome: taf.aerodromeCode,
+                flightWithinForecast: taf.flightWithinForecast,
+                nauticalMilesFromTarget: taf.nauticalMilesFromTarget,
+                winds: Interpreter.extractWindFromTAF(
                     taf.data,
                     taf.aerodromeCode
                 )
             }
         })
+        const landingTemperatures = processedData.landingWeather?.metar.map(metar => {
+            return {
+                aerodromeCode: metar.aerodromeCode,
+                nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
+                date: metar.dateFrom,
+                temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
+                altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
+            }
+        })
 
         const takeoffWinds = processedData.takeoffWeather?.taf.map(taf => {
             return {
-                processed: taf,
-                interpreted: Interpreter.extractWindFromTAF(
+                aerodrome: taf.aerodromeCode,
+                flightWithinForecast: taf.flightWithinForecast,
+                nauticalMilesFromTarget: taf.nauticalMilesFromTarget,
+                winds: Interpreter.extractWindFromTAF(
                     taf.data,
                     taf.aerodromeCode
                 )
+            }
+        })
+        const takeoffTemperatures = processedData.takeoffWeather?.metar.map(metar => {
+            return {
+                aerodromeCode: metar.aerodromeCode,
+                nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
+                date: metar.dateFrom,
+                temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
+                altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
             }
         })
 

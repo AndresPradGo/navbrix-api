@@ -39,7 +39,7 @@ class Interpreter {
     static extractWindFromTAF(data: string, aerodrome: string): TAFWindSummary {
         // Define Regulas expressions
         const permanentChangeGroupRegex = new RegExp(
-            `([A-Z0-9\\s−/]+?)((${aerodrome}|FM|BECMG)(\\s\\d{6}Z\\s|\\s)?(\\d{4})(\\d{2}|\\/)(\\d{4})?|\\bRMK\\b)`, 
+            `([A-Z0-9\\s−/]+?)((${aerodrome}|FM|BECMG)(\\s\\d{6}Z\\s|\\s)?(\\d{4})(\\d{2}|\\/)(\\d{4})?|\sRMK\\s)`, 
             "g"
         );
         const temporaryChangeGroupRegex = /((TEMPO|PROB[34]0)\s(\d{4})\/(\d{4}))/g
@@ -126,13 +126,24 @@ class Interpreter {
         }
     }
 
-    static extractAltimeterFromMETAR(data: string, aerodrome: string) {
-        
+    static extractAltimeterFromMETAR(data: string): number | undefined {
+        const regex = /\sA(\d{4})(\s|=)/g
+        const match = regex.exec(data)
+        if (match === null) return undefined
+        const rawAltimeter = parseInt(match[1])
+        if (Number.isNaN(rawAltimeter)) return undefined
+        return rawAltimeter/100
     }
 
-    static extractTemperatureFromMETAR(data: string, aerodrome: string) {
+    static extractTemperatureFromMETAR(data: string): number | undefined {
+        const regex = /\s(M)?(\d{2})\/M?\d{2}\s/g
+        const match = regex.exec(data)
+        if (match === null) return undefined
+        const temperature = parseInt(match[2])
+        const multiplier = match[1] === 'M' ? -1 : 1
+        if (Number.isNaN(temperature)) return undefined
+        return multiplier * temperature
 
-        
     }
 
     static readUpperWinds(data: string, aerodrome: string) {
