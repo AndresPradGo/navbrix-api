@@ -36,8 +36,8 @@ router.post(
         await scraper.close()
 
         // Process scraped data
-        const aerodromeBriefings = Processor.postprocessAerodromeBriefingOutput(req.body, reports)
-        const enrouteBriefings = Processor.postprocessEnrouteBriefingOutput(req.body, reports, gfas)
+        const aerodromeBriefings = Processor.postprocessScrapedAerodromeBriefing(req.body, reports)
+        const enrouteBriefings = Processor.postprocessScrapedEnrouteBriefing(req.body, reports, gfas)
 
 
         // Return response
@@ -66,7 +66,7 @@ router.post(
         await scraper.close()
         
         // Process scraped data
-        const processedNotams = Processor.postprocessNotams(req.body, notams)
+        const processedNotams = Processor.postprocessScrapedNotams(req.body, notams)
 
         // Return response
         return res.status(200).json({})

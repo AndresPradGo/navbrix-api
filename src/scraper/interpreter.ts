@@ -32,6 +32,17 @@ interface TAFWindSummary {
     groups: ChangeGroup[]
 }
 
+interface UpperwindPerAltitude {
+    altitude: number;
+    forecast?: {
+        temperature?: number;
+        wind?: {
+            knots: number;
+            degreesTrue: number;
+        };
+    }
+}
+
 
 class Interpreter {
 
@@ -146,8 +157,78 @@ class Interpreter {
 
     }
 
-    static readUpperWinds(data: string, aerodrome: string) {
-        
+    static readUpperWinds(data: string): UpperwindPerAltitude[] | undefined {
+        const regex = /^[A-Z0-9 ]+\n[A-Z ]+\n[A-Z0-9 ]+\n[A-Z0-9 ]+\n[A-Z0-9 -]+\n[3690 ]+\n([A-Za-z0-9 -]+)\n[1280 ]+\n([A-Za-z0-9 -]+)$/g
+        const match = regex.exec(data)
+        if(match) {
+            const upperwindArray:UpperwindPerAltitude[]  = [
+                {altitude: 3000}, {altitude: 6000}, {altitude: 9000}, {altitude: 12000}, {altitude: 18000}
+            ]
+            const row1Regex = /^([0-3]\d{2}\s{1,3}\d{1,3}|Calm|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)$/g
+            const row1Match = row1Regex.exec(match[1].trim())
+            if(row1Match){
+               const rowMatchResults = [
+                    {forecast: row1Match[1].trim(), wind: row1Match[1]?.trim(),temperature: undefined},
+                    {forecast: row1Match[3].trim(), wind: row1Match[4]?.trim(),temperature: row1Match[5]?.trim()},
+                    {forecast: row1Match[7].trim(), wind: row1Match[8]?.trim(),temperature: row1Match[9]?.trim()}
+                ]
+                rowMatchResults.forEach((item,idx) => {
+                    if(item.forecast !== "No Forecast") {
+                        if (item.wind && item.wind !== "Calm") {
+                            const knots = parseInt(item.wind.slice(4).trim())
+                            const degreesTrue = parseInt(item.wind.slice(0,3))
+                            upperwindArray[idx].forecast = {
+                                wind: Number.isNaN(knots) || Number.isNaN(degreesTrue) ? undefined : {
+                                    knots,
+                                    degreesTrue
+                                }
+                            }
+                        }
+                        const temperature = parseInt(item.temperature || "")
+                        if (!Number.isNaN(temperature)) {
+                            upperwindArray[idx].forecast = {
+                                ...upperwindArray[idx].forecast,
+                                temperature
+                            }
+                        }
+                    }
+                })
+            }
+            const row2Regex = /^((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)$/g
+            const row2Match = row2Regex.exec(match[2].trim())
+            if(row2Match){
+                const rowMatchResults = [
+                    {forecast: row2Match[2].trim(), wind: row2Match[3]?.trim(),temperature: row2Match[4]?.trim()},
+                    {forecast: row2Match[6].trim(), wind: row2Match[7]?.trim(),temperature: row2Match[8]?.trim()}
+                ]
+                rowMatchResults.forEach((item,idx) => {
+                    if(item.forecast !== "No Forecast") {
+                        if (item.wind && item.wind !== "Calm") {
+                            const knots = parseInt(item.wind.slice(4).trim())
+                            const degreesTrue = parseInt(item.wind.slice(0,3))
+                            upperwindArray[idx + 3].forecast = {
+                                wind: Number.isNaN(knots) || Number.isNaN(degreesTrue) ? undefined : {
+                                    knots,
+                                    degreesTrue
+                                }
+                            }
+                        }
+                        const temperature = parseInt(item.temperature || "")
+                        if (!Number.isNaN(temperature)) {
+                            upperwindArray[idx + 3].forecast = {
+                                ...upperwindArray[idx + 3].forecast,
+                                temperature
+                            }
+                        }
+                    }
+                })
+            }
+            return upperwindArray
+        }
+
+        return undefined
+
+
     }
 
     private static _extractWindFromTAF(data: string): Wind | undefined {

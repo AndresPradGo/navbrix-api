@@ -32,52 +32,64 @@ router.post(
         await scraper.close()
 
         // Process scraped data
-        const processedData = Processor.postprocessorRreportOutput(req.body, scrapedData)
+        const processedData = Processor.postprocessScrapedRreport(req.body, scrapedData)
         
-        const landingWinds = processedData.landingWeather?.taf.map(taf => {
-            return {
+        const takeoffWinds = processedData.takeoffWeather?.taf.map(taf => ({
                 aerodrome: taf.aerodromeCode,
+                dateTimeAt: processedData.takeoffWeather?.dateTimeAt,
                 flightWithinForecast: taf.flightWithinForecast,
                 nauticalMilesFromTarget: taf.nauticalMilesFromTarget,
                 winds: Interpreter.extractWindFromTAF(
                     taf.data,
                     taf.aerodromeCode
                 )
-            }
-        })
-        const landingTemperatures = processedData.landingWeather?.metar.map(metar => {
-            return {
+        }))
+        const takeoffMetarData = processedData.takeoffWeather?.metar.map(metar => ({
                 aerodromeCode: metar.aerodromeCode,
                 nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
                 date: metar.dateFrom,
                 temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
                 altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
-            }
-        })
+        }))
 
-        const takeoffWinds = processedData.takeoffWeather?.taf.map(taf => {
-            return {
-                aerodrome: taf.aerodromeCode,
-                flightWithinForecast: taf.flightWithinForecast,
-                nauticalMilesFromTarget: taf.nauticalMilesFromTarget,
-                winds: Interpreter.extractWindFromTAF(
-                    taf.data,
-                    taf.aerodromeCode
-                )
-            }
-        })
-        const takeoffTemperatures = processedData.takeoffWeather?.metar.map(metar => {
-            return {
+        const legsWeather = processedData.enrouteWeather?.map(leg => ({
+            dateTimeAt: leg.dateTimeAt,
+            upperwind: leg.upperwind.map(item => ({
+                aerodromeCode: item.aerodromeCode,
+                nauticalMilesFromTarget: item.nauticalMilesFromTarget,
+                dateFrom: item.dateFrom,
+                dateTo: item.dateTo,
+                dataPerAltitude: Interpreter.readUpperWinds(item.data),
+                data: item.data
+            })), 
+            altimeters: leg.metar.map(metar => ({
                 aerodromeCode: metar.aerodromeCode,
                 nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
                 date: metar.dateFrom,
-                temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
                 altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
-            }
-        })
+            }))
+        }))
+
+        const landingWinds = processedData.landingWeather?.taf.map(taf => ({
+            aerodrome: taf.aerodromeCode,
+            dateTimeAt: processedData.landingWeather?.dateTimeAt,
+            flightWithinForecast: taf.flightWithinForecast,
+            nauticalMilesFromTarget: taf.nauticalMilesFromTarget,
+            winds: Interpreter.extractWindFromTAF(
+                taf.data,
+                taf.aerodromeCode
+            )
+    }))
+    const landingMetarData = processedData.landingWeather?.metar.map(metar => ({
+            aerodromeCode: metar.aerodromeCode,
+            nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
+            date: metar.dateFrom,
+            temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
+            altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
+    }))
 
         // Return response
-        return res.status(200).json({landingWinds})
+        return res.status(200).json({legsWeather})
     }
 )
 

@@ -164,7 +164,7 @@ class Processor {
     return Array.from(aerodromesList).join(" ")
   }
 
-  static postprocessorRreportOutput (
+  static postprocessScrapedRreport (
     request: ReportRequestInput,
     scrapedData: AerodromesWeatherReports
   ): WeatherReportPostProcessData {
@@ -204,8 +204,8 @@ class Processor {
     if (request.enrouteWeather) {
       const enrouteData: EnrouteReportPostProcessData[] = request.enrouteWeather.map(leg => ({
         dateTimeAt: utcDateTime(leg.dateTime) || new Date(),
-        upperwind: leg.upperwind.map(tafRequest => (
-          Processor._filterReports(tafRequest, upperWinds, utcDateTime(leg.dateTime))
+        upperwind: leg.upperwind.map(request => (
+          Processor._filterReports(request, upperWinds, utcDateTime(leg.dateTime))
         )).filter(report => report !== undefined) as BaseReportResult[],
         metar: leg.metar.map(metarRequest => (
           Processor._filterReports(metarRequest, METARs, utcDateTime(leg.dateTime))
@@ -217,7 +217,7 @@ class Processor {
     return postprocessedData
   }
 
-  static postprocessAerodromeBriefingOutput (
+  static postprocessScrapedAerodromeBriefing (
     request: BriefingRequestInput,
     scrapedData: AerodromesWeatherReports
   ): AerodromeBriefingPostProcessData {
@@ -325,7 +325,7 @@ class Processor {
 
   }
 
-  static postprocessEnrouteBriefingOutput (
+  static postprocessScrapedEnrouteBriefing (
     request: BriefingRequestInput,
     scrapedReports: AerodromesWeatherReports,
     scrapedGFAs: AerodromeGFAs
@@ -478,7 +478,7 @@ class Processor {
   }
 
 
-  static postprocessNotams (
+  static postprocessScrapedNotams (
     request: BriefingRequestInput,
     scrapedNotams: AerodromeNOTAMs,
   ): NOTAMsPostProcessData {
