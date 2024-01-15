@@ -8,6 +8,7 @@ import validateRequest from '../middleware/validateRequest';
 import { reportRequestSchema, reportResposeBodySchema } from '../schemas/report.schema'
 import type { ReportRequestParams, ReportRequestInput, ReportResponseBody } from '../schemas/report.schema'
 import isUtcDateFuture from '../utils/isUtcDateFuture';
+import { db } from '../utils/db.server'
 
 const router = express.Router()
 
@@ -15,6 +16,11 @@ router.post(
     '/:flightId',
     [validateRequest(reportRequestSchema)], 
     async (req: Request<ReportRequestParams, {}, ReportRequestInput>, res: Response<{}>) => {
+        // Check flight exists
+        const flight = await db.flights.findUnique({
+            where: {id: parseInt(req.params.flightId)}
+        })
+        console.log(flight)
         // Check flight is in the future
         if (
             req.body.takeoffWeather && !isUtcDateFuture(req.body.takeoffWeather.dateTime) ||

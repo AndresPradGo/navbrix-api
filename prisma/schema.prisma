@@ -1,0 +1,600 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model aerodrome_status {
+  id           Int          @id @default(autoincrement())
+  status       String       @unique(map: "status") @db.VarChar(50)
+  created_at   DateTime     @db.DateTime(0)
+  last_updated DateTime     @db.DateTime(0)
+  aerodromes   aerodromes[]
+}
+
+model aerodrome_weather_reports {
+  id            Int             @id @default(autoincrement())
+  date          DateTime        @db.DateTime(0)
+  departure_id  Int?
+  arrival_id    Int?
+  created_at    DateTime        @db.DateTime(0)
+  last_updated  DateTime        @db.DateTime(0)
+  departures    departures?     @relation(fields: [departure_id], references: [flight_id], onDelete: Cascade, map: "aerodrome_weather_reports_ibfk_1")
+  arrivals      arrivals?       @relation(fields: [arrival_id], references: [flight_id], onDelete: Cascade, map: "aerodrome_weather_reports_ibfk_2")
+  metar_reports metar_reports[]
+  taf_forecasts taf_forecasts[]
+
+  @@index([arrival_id], map: "arrival_id")
+  @@index([departure_id], map: "departure_id")
+}
+
+model aerodromes {
+  id               Int              @id @default(autoincrement())
+  vfr_waypoint_id  Int?             @unique(map: "vfr_waypoint_id")
+  user_waypoint_id Int?             @unique(map: "user_waypoint_id")
+  has_taf          Boolean
+  has_metar        Boolean
+  has_fds          Boolean
+  elevation_ft     Int
+  status_id        Int
+  created_at       DateTime         @db.DateTime(0)
+  last_updated     DateTime         @db.DateTime(0)
+  vfr_waypoints    vfr_waypoints?   @relation(fields: [vfr_waypoint_id], references: [waypoint_id], onDelete: Cascade, map: "aerodromes_ibfk_1")
+  user_waypoints   user_waypoints?  @relation(fields: [user_waypoint_id], references: [waypoint_id], onDelete: Cascade, map: "aerodromes_ibfk_2")
+  aerodrome_status aerodrome_status @relation(fields: [status_id], references: [id], map: "aerodromes_ibfk_3")
+  arrivals         arrivals[]
+  departures       departures[]
+  fd_forecasts     fd_forecasts[]
+  metar_reports    metar_reports[]
+  runways          runways[]
+  taf_forecasts    taf_forecasts[]
+
+  @@index([status_id], map: "status_id")
+}
+
+model aircraft {
+  id                   Int                    @id @default(autoincrement())
+  make                 String                 @db.VarChar(255)
+  model                String                 @db.VarChar(255)
+  abbreviation         String                 @db.VarChar(10)
+  registration         String                 @db.VarChar(50)
+  owner_id             Int
+  created_at           DateTime               @db.DateTime(0)
+  last_updated         DateTime               @db.DateTime(0)
+  users                users                  @relation(fields: [owner_id], references: [id], onDelete: Cascade, map: "aircraft_ibfk_1")
+  flights              flights[]
+  performance_profiles performance_profiles[]
+
+  @@index([owner_id], map: "owner_id")
+}
+
+model arrivals {
+  flight_id                 Int                         @id @unique(map: "flight_id")
+  temperature_c             Int
+  wind_direction            Int?
+  wind_magnitude_knot       Int
+  altimeter_inhg            Decimal                     @db.Decimal(4, 2)
+  temperature_last_updated  DateTime?                   @db.DateTime(0)
+  wind_last_updated         DateTime?                   @db.DateTime(0)
+  altimeter_last_updated    DateTime?                   @db.DateTime(0)
+  aerodrome_id              Int?
+  created_at                DateTime                    @db.DateTime(0)
+  last_updated              DateTime                    @db.DateTime(0)
+  aerodrome_weather_reports aerodrome_weather_reports[]
+  flights                   flights                     @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "arrivals_ibfk_1")
+  aerodromes                aerodromes?                 @relation(fields: [aerodrome_id], references: [id], map: "arrivals_ibfk_2")
+
+  @@index([aerodrome_id], map: "aerodrome_id")
+}
+
+model baggage_compartments {
+  id                     Int                  @id @default(autoincrement())
+  name                   String               @db.VarChar(50)
+  arm_in                 Decimal              @db.Decimal(6, 2)
+  weight_limit_lb        Decimal?             @db.Decimal(6, 2)
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "baggage_compartments_ibfk_1")
+  baggages               baggages[]
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model baggages {
+  id                     Int                  @id @default(autoincrement())
+  name                   String               @db.VarChar(255)
+  weight_lb              Decimal              @db.Decimal(5, 2)
+  flight_id              Int
+  baggage_compartment_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  flights                flights              @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "baggages_ibfk_1")
+  baggage_compartments   baggage_compartments @relation(fields: [baggage_compartment_id], references: [id], onDelete: Cascade, map: "baggages_ibfk_2")
+
+  @@index([baggage_compartment_id], map: "baggage_compartment_id")
+  @@index([flight_id], map: "flight_id")
+}
+
+model climb_performance_data {
+  id                     Int                  @id @default(autoincrement())
+  weight_lb              Int
+  pressure_alt_ft        Int
+  temperature_c          Int
+  kias                   Int?
+  fpm                    Int?
+  time_min               Int
+  fuel_gal               Decimal              @db.Decimal(4, 2)
+  distance_nm            Int
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "climb_performance_data_ibfk_1")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model cruise_performance_data {
+  id                     Int                  @id @default(autoincrement())
+  weight_lb              Int
+  pressure_alt_ft        Int
+  temperature_c          Int
+  bhp_percent            Int
+  rpm                    Int
+  ktas                   Int
+  gph                    Decimal              @db.Decimal(6, 2)
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "cruise_performance_data_ibfk_1")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model departures {
+  flight_id                 Int                         @id @unique(map: "flight_id")
+  temperature_c             Int
+  wind_direction            Int?
+  wind_magnitude_knot       Int
+  altimeter_inhg            Decimal                     @db.Decimal(4, 2)
+  temperature_last_updated  DateTime?                   @db.DateTime(0)
+  wind_last_updated         DateTime?                   @db.DateTime(0)
+  altimeter_last_updated    DateTime?                   @db.DateTime(0)
+  aerodrome_id              Int?
+  created_at                DateTime                    @db.DateTime(0)
+  last_updated              DateTime                    @db.DateTime(0)
+  aerodrome_weather_reports aerodrome_weather_reports[]
+  flights                   flights                     @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "departures_ibfk_1")
+  aerodromes                aerodromes?                 @relation(fields: [aerodrome_id], references: [id], map: "departures_ibfk_2")
+
+  @@index([aerodrome_id], map: "aerodrome_id")
+}
+
+model enroute_weather_reports {
+  id            Int             @id @default(autoincrement())
+  date          DateTime        @db.DateTime(0)
+  leg_id        Int?            @unique(map: "leg_id")
+  created_at    DateTime        @db.DateTime(0)
+  last_updated  DateTime        @db.DateTime(0)
+  legs          legs?           @relation(fields: [leg_id], references: [id], onDelete: Cascade, map: "enroute_weather_reports_ibfk_1")
+  fd_forecasts  fd_forecasts[]
+  metar_reports metar_reports[]
+}
+
+model fd_forecasts {
+  id                      Int                     @id @default(autoincrement())
+  date_from               DateTime                @db.DateTime(0)
+  date_to                 DateTime                @db.DateTime(0)
+  altitude_ft_1           Int
+  wind_direction_1        Int?
+  wind_magnitude_knot_1   Int
+  temperature_c_1         Int
+  altitude_ft_2           Int
+  wind_direction_2        Int?
+  wind_magnitude_knot_2   Int
+  temperature_c_2         Int
+  enroute_weather_id      Int
+  aerodrome_id            Int
+  created_at              DateTime                @db.DateTime(0)
+  last_updated            DateTime                @db.DateTime(0)
+  enroute_weather_reports enroute_weather_reports @relation(fields: [enroute_weather_id], references: [id], onDelete: Cascade, map: "fd_forecasts_ibfk_1")
+  aerodromes              aerodromes              @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "fd_forecasts_ibfk_2")
+
+  @@index([aerodrome_id], map: "aerodrome_id")
+  @@index([enroute_weather_id], map: "enroute_weather_id")
+}
+
+model flight_waypoints {
+  waypoint_id        Int       @id @unique(map: "waypoint_id")
+  code               String    @db.VarChar(12)
+  name               String    @db.VarChar(50)
+  from_user_waypoint Boolean
+  from_vfr_waypoint  Boolean
+  leg_id             Int
+  created_at         DateTime  @db.DateTime(0)
+  last_updated       DateTime  @db.DateTime(0)
+  waypoints          waypoints @relation(fields: [waypoint_id], references: [id], map: "flight_waypoints_ibfk_1")
+  legs               legs      @relation(fields: [leg_id], references: [id], onDelete: Cascade, map: "flight_waypoints_ibfk_2")
+
+  @@index([leg_id], map: "leg_id")
+}
+
+model flights {
+  id                       Int                @id @default(autoincrement())
+  departure_time           DateTime           @db.DateTime(0)
+  bhp_percent              Int
+  added_enroute_time_hours Decimal            @db.Decimal(4, 2)
+  reserve_fuel_hours       Decimal            @db.Decimal(4, 2)
+  contingency_fuel_hours   Decimal            @db.Decimal(4, 2)
+  briefing_radius_nm       Int
+  alternate_radius_nm      Int
+  aircraft_id              Int?
+  pilot_id                 Int
+  created_at               DateTime           @db.DateTime(0)
+  last_updated             DateTime           @db.DateTime(0)
+  arrivals                 arrivals?
+  baggages                 baggages[]
+  departures               departures?
+  aircraft                 aircraft?          @relation(fields: [aircraft_id], references: [id], map: "flights_ibfk_1")
+  users                    users              @relation(fields: [pilot_id], references: [id], onDelete: Cascade, map: "flights_ibfk_2")
+  fuel                     fuel[]
+  legs                     legs[]
+  persons_on_board         persons_on_board[]
+
+  @@index([aircraft_id], map: "aircraft_id")
+  @@index([pilot_id], map: "pilot_id")
+}
+
+model fuel {
+  id           Int        @id @default(autoincrement())
+  gallons      Decimal    @db.Decimal(5, 2)
+  flight_id    Int
+  fuel_tank_id Int
+  created_at   DateTime   @db.DateTime(0)
+  last_updated DateTime   @db.DateTime(0)
+  flights      flights    @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "fuel_ibfk_1")
+  fuel_tanks   fuel_tanks @relation(fields: [fuel_tank_id], references: [id], onDelete: Cascade, map: "fuel_ibfk_2")
+
+  @@index([flight_id], map: "flight_id")
+  @@index([fuel_tank_id], map: "fuel_tank_id")
+}
+
+model fuel_tanks {
+  id                     Int                  @id @default(autoincrement())
+  name                   String               @db.VarChar(50)
+  arm_in                 Decimal              @db.Decimal(6, 2)
+  fuel_capacity_gallons  Decimal              @db.Decimal(5, 2)
+  unusable_fuel_gallons  Decimal              @db.Decimal(5, 2)
+  burn_sequence          Int
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  fuel                   fuel[]
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "fuel_tanks_ibfk_1")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model fuel_types {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @unique(map: "name") @db.VarChar(50)
+  density_lb_gal       Decimal                @db.Decimal(4, 2)
+  created_at           DateTime               @db.DateTime(0)
+  last_updated         DateTime               @db.DateTime(0)
+  performance_profiles performance_profiles[]
+}
+
+model landing_performance_data {
+  id                     Int                  @id @default(autoincrement())
+  weight_lb              Int
+  pressure_alt_ft        Int
+  temperature_c          Int
+  groundroll_ft          Int
+  obstacle_clearance_ft  Int
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "landing_performance_data_ibfk_1")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model legs {
+  id                       Int                      @id @default(autoincrement())
+  sequence                 Int
+  altitude_ft              Int
+  temperature_c            Int
+  wind_direction           Int?
+  wind_magnitude_knot      Int
+  altimeter_inhg           Decimal                  @db.Decimal(4, 2)
+  temperature_last_updated DateTime?                @db.DateTime(0)
+  wind_last_updated        DateTime?                @db.DateTime(0)
+  altimeter_last_updated   DateTime?                @db.DateTime(0)
+  flight_id                Int
+  created_at               DateTime                 @db.DateTime(0)
+  last_updated             DateTime                 @db.DateTime(0)
+  enroute_weather_reports  enroute_weather_reports?
+  flight_waypoints         flight_waypoints[]
+  flights                  flights                  @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "legs_ibfk_1")
+
+  @@index([flight_id], map: "flight_id")
+}
+
+model metar_reports {
+  id                        Int                        @id @default(autoincrement())
+  date                      DateTime                   @db.DateTime(0)
+  altimeter_inhg            Decimal                    @db.Decimal(4, 2)
+  temperature_c             Int
+  aerodrome_weather_id      Int?
+  enroute_weather_id        Int?
+  aerodrome_id              Int
+  created_at                DateTime                   @db.DateTime(0)
+  last_updated              DateTime                   @db.DateTime(0)
+  aerodrome_weather_reports aerodrome_weather_reports? @relation(fields: [aerodrome_weather_id], references: [id], onDelete: Cascade, map: "metar_reports_ibfk_1")
+  enroute_weather_reports   enroute_weather_reports?   @relation(fields: [enroute_weather_id], references: [id], onDelete: Cascade, map: "metar_reports_ibfk_2")
+  aerodromes                aerodromes                 @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "metar_reports_ibfk_3")
+
+  @@index([aerodrome_id], map: "aerodrome_id")
+  @@index([aerodrome_weather_id], map: "aerodrome_weather_id")
+  @@index([enroute_weather_id], map: "enroute_weather_id")
+}
+
+model passenger_profiles {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar(255)
+  weight_lb        Decimal            @db.Decimal(5, 2)
+  creator_id       Int
+  created_at       DateTime           @db.DateTime(0)
+  last_updated     DateTime           @db.DateTime(0)
+  users            users              @relation(fields: [creator_id], references: [id], onDelete: Cascade, map: "passenger_profiles_ibfk_1")
+  persons_on_board persons_on_board[]
+
+  @@index([creator_id], map: "creator_id")
+}
+
+model performance_profiles {
+  id                                     Int                             @id @default(autoincrement())
+  name                                   String                          @db.VarChar(255)
+  is_complete                            Boolean
+  center_of_gravity_in                   Decimal?                        @db.Decimal(6, 2)
+  empty_weight_lb                        Decimal                         @db.Decimal(7, 2)
+  max_ramp_weight_lb                     Decimal                         @db.Decimal(7, 2)
+  max_takeoff_weight_lb                  Decimal                         @db.Decimal(7, 2)
+  max_landing_weight_lb                  Decimal                         @db.Decimal(7, 2)
+  baggage_allowance_lb                   Decimal                         @db.Decimal(6, 2)
+  take_off_taxi_fuel_gallons             Decimal                         @db.Decimal(4, 2)
+  percent_decrease_takeoff_headwind_knot Decimal                         @db.Decimal(4, 2)
+  percent_increase_takeoff_tailwind_knot Decimal                         @db.Decimal(4, 2)
+  percent_decrease_landing_headwind_knot Decimal                         @db.Decimal(4, 2)
+  percent_increase_landing_tailwind_knot Decimal                         @db.Decimal(4, 2)
+  percent_increase_climb_temperature_c   Decimal                         @db.Decimal(4, 2)
+  is_preferred                           Boolean
+  fuel_type_id                           Int?
+  aircraft_id                            Int?
+  created_at                             DateTime                        @db.DateTime(0)
+  last_updated                           DateTime                        @db.DateTime(0)
+  baggage_compartments                   baggage_compartments[]
+  climb_performance_data                 climb_performance_data[]
+  cruise_performance_data                cruise_performance_data[]
+  fuel_tanks                             fuel_tanks[]
+  landing_performance_data               landing_performance_data[]
+  fuel_types                             fuel_types?                     @relation(fields: [fuel_type_id], references: [id], onDelete: Restrict, map: "performance_profiles_ibfk_1")
+  aircraft                               aircraft?                       @relation(fields: [aircraft_id], references: [id], onDelete: Cascade, map: "performance_profiles_ibfk_2")
+  seat_rows                              seat_rows[]
+  surfaces_performance_decrease          surfaces_performance_decrease[]
+  takeoff_performance_data               takeoff_performance_data[]
+  weight_balance_profiles                weight_balance_profiles[]
+
+  @@index([aircraft_id], map: "aircraft_id")
+  @@index([fuel_type_id], map: "fuel_type_id")
+}
+
+model persons_on_board {
+  id                   Int                 @id @default(autoincrement())
+  seat_number          Int
+  name                 String?             @db.VarChar(255)
+  weight_lb            Decimal?            @db.Decimal(5, 2)
+  flight_id            Int?
+  seat_row_id          Int
+  user_id              Int?
+  passenger_profile_id Int?
+  created_at           DateTime            @db.DateTime(0)
+  last_updated         DateTime            @db.DateTime(0)
+  flights              flights?            @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "persons_on_board_ibfk_1")
+  seat_rows            seat_rows           @relation(fields: [seat_row_id], references: [id], onDelete: Cascade, map: "persons_on_board_ibfk_2")
+  users                users?              @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "persons_on_board_ibfk_3")
+  passenger_profiles   passenger_profiles? @relation(fields: [passenger_profile_id], references: [id], onDelete: Cascade, map: "persons_on_board_ibfk_4")
+
+  @@index([flight_id], map: "flight_id")
+  @@index([passenger_profile_id], map: "passenger_profile_id")
+  @@index([seat_row_id], map: "seat_row_id")
+  @@index([user_id], map: "user_id")
+}
+
+model runway_surfaces {
+  id                            Int                             @id @default(autoincrement())
+  surface                       String                          @unique(map: "surface") @db.VarChar(50)
+  created_at                    DateTime                        @db.DateTime(0)
+  last_updated                  DateTime                        @db.DateTime(0)
+  runways                       runways[]
+  surfaces_performance_decrease surfaces_performance_decrease[]
+}
+
+model runways {
+  id                               Int             @id @default(autoincrement())
+  length_ft                        Int
+  landing_length_ft                Int
+  intersection_departure_length_ft Int?
+  number                           Int
+  position                         String?         @db.VarChar(1)
+  surface_id                       Int
+  aerodrome_id                     Int
+  created_at                       DateTime        @db.DateTime(0)
+  last_updated                     DateTime        @db.DateTime(0)
+  runway_surfaces                  runway_surfaces @relation(fields: [surface_id], references: [id], map: "runways_ibfk_1")
+  aerodromes                       aerodromes      @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "runways_ibfk_2")
+
+  @@index([aerodrome_id], map: "aerodrome_id")
+  @@index([surface_id], map: "surface_id")
+}
+
+model seat_rows {
+  id                     Int                  @id @default(autoincrement())
+  name                   String               @db.VarChar(50)
+  arm_in                 Decimal              @db.Decimal(6, 2)
+  weight_limit_lb        Decimal?             @db.Decimal(6, 2)
+  number_of_seats        Int
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  persons_on_board       persons_on_board[]
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "seat_rows_ibfk_1")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model surfaces_performance_decrease {
+  id                     Int                  @id @default(autoincrement())
+  percent                Decimal              @db.Decimal(4, 2)
+  is_takeoff             Boolean
+  surface_id             Int
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  runway_surfaces        runway_surfaces      @relation(fields: [surface_id], references: [id], map: "surfaces_performance_decrease_ibfk_1")
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "surfaces_performance_decrease_ibfk_2")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+  @@index([surface_id], map: "surface_id")
+}
+
+model taf_forecasts {
+  id                        Int                       @id @default(autoincrement())
+  date                      DateTime                  @db.DateTime(0)
+  date_from                 DateTime                  @db.DateTime(0)
+  date_to                   DateTime                  @db.DateTime(0)
+  wind_direction            Int?
+  wind_direction_range      Int?
+  wind_magnitude_knot       Int
+  gust_factor_knot          Int?
+  aerodrome_weather_id      Int
+  aerodrome_id              Int
+  created_at                DateTime                  @db.DateTime(0)
+  last_updated              DateTime                  @db.DateTime(0)
+  aerodrome_weather_reports aerodrome_weather_reports @relation(fields: [aerodrome_weather_id], references: [id], onDelete: Cascade, map: "taf_forecasts_ibfk_1")
+  aerodromes                aerodromes                @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "taf_forecasts_ibfk_2")
+
+  @@index([aerodrome_id], map: "aerodrome_id")
+  @@index([aerodrome_weather_id], map: "aerodrome_weather_id")
+}
+
+model takeoff_performance_data {
+  id                     Int                  @id @default(autoincrement())
+  weight_lb              Int
+  pressure_alt_ft        Int
+  temperature_c          Int
+  groundroll_ft          Int
+  obstacle_clearance_ft  Int
+  performance_profile_id Int
+  created_at             DateTime             @db.DateTime(0)
+  last_updated           DateTime             @db.DateTime(0)
+  performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "takeoff_performance_data_ibfk_1")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model user_waypoints {
+  waypoint_id  Int         @id @unique(map: "waypoint_id")
+  code         String      @db.VarChar(12)
+  name         String      @db.VarChar(50)
+  creator_id   Int
+  created_at   DateTime    @db.DateTime(0)
+  last_updated DateTime    @db.DateTime(0)
+  aerodromes   aerodromes?
+  waypoints    waypoints   @relation(fields: [waypoint_id], references: [id], onDelete: Cascade, map: "user_waypoints_ibfk_1")
+  users        users       @relation(fields: [creator_id], references: [id], onDelete: Cascade, map: "user_waypoints_ibfk_2")
+
+  @@index([creator_id], map: "creator_id")
+}
+
+model users {
+  id                 Int                  @id @default(autoincrement())
+  email              String               @unique(map: "email") @db.VarChar(255)
+  name               String               @db.VarChar(255)
+  weight_lb          Decimal              @db.Decimal(5, 2)
+  password           String               @db.VarChar(255)
+  is_active          Boolean
+  is_admin           Boolean
+  is_master          Boolean
+  is_trial           Boolean
+  created_at         DateTime             @db.DateTime(0)
+  last_updated       DateTime             @db.DateTime(0)
+  aircraft           aircraft[]
+  flights            flights[]
+  passenger_profiles passenger_profiles[]
+  persons_on_board   persons_on_board[]
+  user_waypoints     user_waypoints[]
+  vfr_waypoints      vfr_waypoints[]
+}
+
+model vfr_waypoints {
+  waypoint_id  Int         @id @unique(map: "waypoint_id")
+  code         String      @unique(map: "code") @db.VarChar(12)
+  name         String      @db.VarChar(255)
+  hidden       Boolean
+  creator_id   Int
+  created_at   DateTime    @db.DateTime(0)
+  last_updated DateTime    @db.DateTime(0)
+  aerodromes   aerodromes?
+  waypoints    waypoints   @relation(fields: [waypoint_id], references: [id], onDelete: Cascade, map: "vfr_waypoints_ibfk_1")
+  users        users       @relation(fields: [creator_id], references: [id], onDelete: Cascade, map: "vfr_waypoints_ibfk_2")
+
+  @@index([creator_id], map: "creator_id")
+}
+
+model waypoints {
+  id                 Int               @id @default(autoincrement())
+  lat_degrees        Int
+  lat_minutes        Int
+  lat_seconds        Int
+  lat_direction      String            @db.VarChar(1)
+  lon_degrees        Int
+  lon_minutes        Int
+  lon_seconds        Int
+  lon_direction      String            @db.VarChar(1)
+  magnetic_variation Decimal?          @db.Decimal(4, 2)
+  in_north_airspace  Boolean
+  created_at         DateTime          @db.DateTime(0)
+  last_updated       DateTime          @db.DateTime(0)
+  flight_waypoints   flight_waypoints?
+  user_waypoints     user_waypoints?
+  vfr_waypoints      vfr_waypoints?
+}
+
+model weight_balance_limits {
+  id                        Int                     @id @default(autoincrement())
+  cg_location_in            Decimal                 @db.Decimal(6, 2)
+  weight_lb                 Decimal                 @db.Decimal(7, 2)
+  sequence                  Int
+  weight_balance_profile_id Int
+  created_at                DateTime                @db.DateTime(0)
+  last_updated              DateTime                @db.DateTime(0)
+  weight_balance_profiles   weight_balance_profiles @relation(fields: [weight_balance_profile_id], references: [id], onDelete: Cascade, map: "weight_balance_limits_ibfk_1")
+
+  @@index([weight_balance_profile_id], map: "weight_balance_profile_id")
+}
+
+model weight_balance_profiles {
+  id                     Int                     @id @default(autoincrement())
+  name                   String                  @db.VarChar(50)
+  performance_profile_id Int
+  created_at             DateTime                @db.DateTime(0)
+  last_updated           DateTime                @db.DateTime(0)
+  weight_balance_limits  weight_balance_limits[]
+  performance_profiles   performance_profiles    @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "weight_balance_profiles_ibfk_1")
+
+  @@index([performance_profile_id], map: "performance_profile_id")
+}
