@@ -57,6 +57,7 @@ interface AerodromeReportPostProcessData {
 
 interface EnrouteReportPostProcessData {
   dateTimeAt: Date;
+  altitude: number;
   upperwind: BaseReportResult[]
   metar: BaseReportResult[]
 }
@@ -204,6 +205,7 @@ class Processor {
     if (request.enrouteWeather) {
       const enrouteData: EnrouteReportPostProcessData[] = request.enrouteWeather.map(leg => ({
         dateTimeAt: utcDateTime(leg.dateTime) || new Date(),
+        altitude: leg.altitude,
         upperwind: leg.upperwind.map(request => (
           Processor._filterReports(request, upperWinds, utcDateTime(leg.dateTime))
         )).filter(report => report !== undefined) as BaseReportResult[],

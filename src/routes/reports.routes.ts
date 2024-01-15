@@ -31,7 +31,7 @@ router.post(
         const scrapedData = await scraper.getAerodromeReports(scraperInput)
         await scraper.close()
 
-        // Process scraped data
+        // Process and interprete scraped data
         const processedData = Processor.postprocessScrapedRreport(req.body, scrapedData)
         
         const takeoffWinds = processedData.takeoffWeather?.taf.map(taf => ({
@@ -51,9 +51,9 @@ router.post(
                 temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
                 altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
         }))
-
         const legsWeather = processedData.enrouteWeather?.map(leg => ({
             dateTimeAt: leg.dateTimeAt,
+            altitude: leg.altitude,
             upperwind: leg.upperwind.map(item => ({
                 aerodromeCode: item.aerodromeCode,
                 nauticalMilesFromTarget: item.nauticalMilesFromTarget,
@@ -69,7 +69,6 @@ router.post(
                 altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
             }))
         }))
-
         const landingWinds = processedData.landingWeather?.taf.map(taf => ({
             aerodrome: taf.aerodromeCode,
             dateTimeAt: processedData.landingWeather?.dateTimeAt,
@@ -79,14 +78,14 @@ router.post(
                 taf.data,
                 taf.aerodromeCode
             )
-    }))
-    const landingMetarData = processedData.landingWeather?.metar.map(metar => ({
-            aerodromeCode: metar.aerodromeCode,
-            nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
-            date: metar.dateFrom,
-            temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
-            altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
-    }))
+        }))
+        const landingMetarData = processedData.landingWeather?.metar.map(metar => ({
+                aerodromeCode: metar.aerodromeCode,
+                nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
+                date: metar.dateFrom,
+                temperature: Interpreter.extractTemperatureFromMETAR(metar.data),
+                altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
+        }))
 
         // Return response
         return res.status(200).json({legsWeather})

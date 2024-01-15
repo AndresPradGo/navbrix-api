@@ -32,6 +32,7 @@ const enrouteReportRequestSchema = z.object({
     dateTime: z
         .string({ required_error: "Date-time is required" })
         .datetime('Date-time format: "2020-01-01T00:00:00Z"'),
+    altitude: z.number({ required_error: "altitude is required" }),
     upperwind: z.array(baseReportRequestSchema, { required_error: "Upper Winds are required" }),
     metar: z.array(baseReportRequestSchema, { required_error: "METARs are required" })
 })
