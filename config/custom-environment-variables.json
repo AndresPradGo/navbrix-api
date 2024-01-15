@@ -1,0 +1,4 @@
+{
+    "jwt_secret_key": "FLIGHT_PLANNER_JWT_SECRET_KEY",
+    "jwt_algorithm": "FLIGHT_PLANNER_JWT_ALGORITHM"
+}

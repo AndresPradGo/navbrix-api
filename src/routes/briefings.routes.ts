@@ -3,6 +3,7 @@ import type { Request, Response } from 'express'
 
 import Scraper from '../scraper/scraper';
 import validateRequest from '../middleware/validateRequest';
+import auth from '../middleware/auth'
 import { briefingRequestSchema } from '../schemas/briefing.schema'
 import type { BriefingRequestInput } from '../schemas/briefing.schema'
 import Processor from '../scraper/processor';
@@ -14,7 +15,7 @@ const router = express.Router()
 // POST: Weather briefing
 router.post(
     '/weather', 
-    [validateRequest(briefingRequestSchema)],
+    [validateRequest(briefingRequestSchema), auth],
     async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
         // Check flight is in the future
         if (
@@ -48,7 +49,7 @@ router.post(
 // POST: NOTAM briefing
 router.post(
     '/notam', 
-    [validateRequest(briefingRequestSchema)],
+    [validateRequest(briefingRequestSchema), auth],
     async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
         // Check flight is in the future
         if (

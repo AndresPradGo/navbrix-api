@@ -48,7 +48,7 @@ const reportParamsSquema = z.object({
         .string()
         .regex(/^[1-9]\d*$/, {
             message: "Flight ID must be a round number greather than zero.",
-          }),
+        }),
   })
 
 export const reportRequestSchema = z.object({

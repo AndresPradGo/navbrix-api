@@ -5,6 +5,7 @@ import Scraper from '../scraper/scraper';
 import Processor from '../scraper/processor';
 import Interpreter from '../scraper/interpreter'
 import validateRequest from '../middleware/validateRequest';
+import auth from '../middleware/auth'
 import { reportRequestSchema, reportResposeBodySchema } from '../schemas/report.schema'
 import type { ReportRequestParams, ReportRequestInput, ReportResponseBody } from '../schemas/report.schema'
 import isUtcDateFuture from '../utils/isUtcDateFuture';
@@ -14,13 +15,12 @@ const router = express.Router()
 
 router.post(
     '/:flightId',
-    [validateRequest(reportRequestSchema)], 
+    [validateRequest(reportRequestSchema), auth], 
     async (req: Request<ReportRequestParams, {}, ReportRequestInput>, res: Response<{}>) => {
         // Check flight exists
         const flight = await db.flights.findUnique({
             where: {id: parseInt(req.params.flightId)}
         })
-        console.log(flight)
         // Check flight is in the future
         if (
             req.body.takeoffWeather && !isUtcDateFuture(req.body.takeoffWeather.dateTime) ||
