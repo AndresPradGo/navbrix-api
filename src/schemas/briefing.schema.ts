@@ -43,6 +43,14 @@ const departureArrivalAerodromeSchema = z.object({
         }),
 })
 
+const briefingParamsSquema = z.object({
+    flightId: z
+        .string()
+        .regex(/^[1-9]\d*$/, {
+            message: "Flight ID must be a round number greather than zero.",
+        }),
+})
+
 const briefingRequestBodySchema = z.object ({
     departure: departureArrivalAerodromeSchema,
     legs: z.array(briefingRequestBaseSchema),
@@ -51,8 +59,10 @@ const briefingRequestBodySchema = z.object ({
 })
 
 export const briefingRequestSchema = z.object({
-    body: briefingRequestBodySchema
+    body: briefingRequestBodySchema,
+    params: briefingParamsSquema
 })
 
 // Types
+export type BriefingRequestParams = z.infer<typeof briefingParamsSquema>
 export type BriefingRequestInput = z.infer<typeof briefingRequestBodySchema>;

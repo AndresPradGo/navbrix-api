@@ -4,19 +4,41 @@ import type { Request, Response } from 'express'
 import Scraper from '../scraper/scraper';
 import validateRequest from '../middleware/validateRequest';
 import auth from '../middleware/auth'
+import {getUserFlight, getOfficialAerodromes} from '../services/shared.services'
 import { briefingRequestSchema } from '../schemas/briefing.schema'
-import type { BriefingRequestInput } from '../schemas/briefing.schema'
+import type { BriefingRequestInput, BriefingRequestParams } from '../schemas/briefing.schema'
 import Processor from '../scraper/processor';
 import isUtcDateFuture from '../utils/isUtcDateFuture';
 
+
+// Reusable function to check aerodrome codes are valid
+const aerodromesAreValid = async (req: Request<BriefingRequestParams, {}, BriefingRequestInput>) => {
+    const aerodromesSet: Set<string> = new Set()
+        aerodromesSet.add(req.body.departure.aerodrome)
+        aerodromesSet.add(req.body.arrival.aerodrome)
+        req.body.alternates.aerodromes.forEach(a => aerodromesSet.add(a.code));
+        req.body.legs.forEach(leg => {
+            leg.aerodromes.forEach(a => aerodromesSet.add(a.code));
+        });
+        if(aerodromesSet.size > 0) {
+            const aerodromesList = [...aerodromesSet]
+            const aerodromesInDB = await getOfficialAerodromes(aerodromesList)
+            return aerodromesInDB.length >= aerodromesList.length
+        }
+        return true
+}
 
 const router = express.Router()
 
 // POST: Weather briefing
 router.post(
-    '/weather', 
+    '/weather/:flightId', 
     [validateRequest(briefingRequestSchema), auth],
-    async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
+    async (req: Request<BriefingRequestParams, {}, BriefingRequestInput>, res: Response<{}>) => {
+        // Check if user has permissions to update flight
+        const flight = await getUserFlight(parseInt(req.params.flightId), req.query.userEmail as string)
+        if(!flight) return res.status(400).json('You do not have permissions to update this flight.')
+
         // Check flight is in the future
         if (
             !isUtcDateFuture(req.body.departure.dateTime) ||
@@ -24,6 +46,11 @@ router.post(
             !isUtcDateFuture(req.body.alternates.dateTime) ||
             !!req.body.legs.find(leg => (!isUtcDateFuture(leg.dateTime))) 
         ) return res.status(400).json('Flight must be in the future.')
+
+        // Check all aerodrome codes are valid
+        if (await aerodromesAreValid(req))
+                return res.status(400).json('All aerodrome codes need to be valid codes.')
+
         
         // Scrape
         const aerodromeCodes = Processor.preprocessBriefingInput(req.body)
@@ -48,9 +75,9 @@ router.post(
 
 // POST: NOTAM briefing
 router.post(
-    '/notam', 
+    '/notam/:flightId', 
     [validateRequest(briefingRequestSchema), auth],
-    async (req: Request<{}, {}, BriefingRequestInput>, res: Response<{}>) => {
+    async (req: Request<BriefingRequestParams, {}, BriefingRequestInput>, res: Response<{}>) => {
         // Check flight is in the future
         if (
             !isUtcDateFuture(req.body.departure.dateTime) ||
@@ -58,6 +85,10 @@ router.post(
             !isUtcDateFuture(req.body.alternates.dateTime) ||
             !!req.body.legs.find(leg => (!isUtcDateFuture(leg.dateTime))) 
         ) return res.status(400).json('Flight must be in the future.')
+
+        // Check all aerodrome codes are valid
+        if (await aerodromesAreValid(req))
+                return res.status(400).json('All aerodrome codes need to be valid codes.')
         
         // Scrape
         const aerodromeCodes = Processor.preprocessBriefingInput(req.body)
