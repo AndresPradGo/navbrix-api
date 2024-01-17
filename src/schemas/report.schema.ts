@@ -71,8 +71,8 @@ const baseReportResponseSchema = z.object({
             required_error: "Wind direction is required"
         })
         .int("Wind direction must be a round number")
-        .min(1, "Wind direction must be bewteen 1 and 360")
-        .max(360, "Wind direction must be bewteen 1 and 360")
+        .min(0, "Wind direction must be bewteen 0 and 360")
+        .max(360, "Wind direction must be bewteen 0 and 360")
         .optional(),
   temperature_c: z
         .number({ 

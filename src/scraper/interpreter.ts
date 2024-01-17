@@ -14,7 +14,7 @@ interface TemporaryGroup {
     wind: Wind;
 }
 
-type ChangeGroup = ({
+export type ChangeGroup = ({
     dateFrom: Date;
     dateTo: Date;
     type: 'MAIN' | 'FM';
@@ -27,7 +27,7 @@ type ChangeGroup = ({
     groups: TemporaryGroup[]
 })
 
-interface TAFWindSummary {
+export interface TAFWindSummary {
     date: Date;
     groups: ChangeGroup[]
 }
@@ -43,14 +43,14 @@ interface UpperwindPerAltitude {
     }
 }
 
-
+// Interpreter has functions to extract the relevant data from the scraped and processed weather-reports
 class Interpreter {
 
 
     static extractWindFromTAF(data: string, aerodrome: string): TAFWindSummary {
         // Define Regulas expressions
         const permanentChangeGroupRegex = new RegExp(
-            `([A-Z0-9\\s−/]+?)((${aerodrome}|FM|BECMG)(\\s\\d{6}Z\\s|\\s)?(\\d{4})(\\d{2}|\\/)(\\d{4})?|\sRMK\\s)`, 
+            `([A-Z0-9\\s−/]+?)((${aerodrome}|FM|BECMG)(\\s\\d{6}Z\\s|\\s)?(\\d{4})(\\d{2}|\\/)(\\d{4})?|\\sRMK\\s)`, 
             "g"
         );
         const temporaryChangeGroupRegex = /((TEMPO|PROB[34]0)\s(\d{4})\/(\d{4}))/g
