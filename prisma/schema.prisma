@@ -188,20 +188,13 @@ model fd_forecasts {
   id                      Int                     @id @default(autoincrement())
   date_from               DateTime                @db.DateTime(0)
   date_to                 DateTime                @db.DateTime(0)
-  altitude_ft_1           Int
-  wind_direction_1        Int?
-  wind_magnitude_knot_1   Int
-  temperature_c_1         Int
-  altitude_ft_2           Int
-  wind_direction_2        Int?
-  wind_magnitude_knot_2   Int
-  temperature_c_2         Int
   enroute_weather_id      Int
   aerodrome_id            Int
   created_at              DateTime                @db.DateTime(0)
   last_updated            DateTime                @db.DateTime(0)
   enroute_weather_reports enroute_weather_reports @relation(fields: [enroute_weather_id], references: [id], onDelete: Cascade, map: "fd_forecasts_ibfk_1")
   aerodromes              aerodromes              @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "fd_forecasts_ibfk_2")
+  fds_at_altitude         fds_at_altitude[]
 
   @@index([aerodrome_id], map: "aerodrome_id")
   @@index([enroute_weather_id], map: "enroute_weather_id")
@@ -597,4 +590,18 @@ model weight_balance_profiles {
   performance_profiles   performance_profiles    @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "weight_balance_profiles_ibfk_1")
 
   @@index([performance_profile_id], map: "performance_profile_id")
+}
+
+model fds_at_altitude {
+  id                  Int          @id @default(autoincrement())
+  altitude_ft         Int
+  wind_direction      Int?
+  wind_magnitude_knot Int?
+  temperature_c       Int?
+  fd_forecasts_id     Int
+  created_at          DateTime     @db.DateTime(0)
+  last_updated        DateTime     @db.DateTime(0)
+  fd_forecasts        fd_forecasts @relation(fields: [fd_forecasts_id], references: [id], onDelete: Cascade, map: "fds_at_altitude_ibfk_1")
+
+  @@index([fd_forecasts_id], map: "fd_forecasts_id")
 }

@@ -107,25 +107,36 @@ router.post(
             }
         }
 
-        // Interprete enroute processed data
-        const legsWeather = processedData.enrouteWeather?.map(leg => ({
-            dateTimeAt: leg.dateTimeAt,
-            altitude: leg.altitude,
-            upperwind: leg.upperwind.map(item => ({
-                aerodromeCode: item.aerodromeCode,
-                nauticalMilesFromTarget: item.nauticalMilesFromTarget,
-                dateFrom: item.dateFrom,
-                dateTo: item.dateTo,
-                dataPerAltitude: Interpreter.readUpperWinds(item.data),
-                data: item.data
-            })), 
-            altimeters: leg.metar.map(metar => ({
-                aerodromeCode: metar.aerodromeCode,
-                nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
-                date: metar.dateFrom,
-                altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
+        // Interprete and clean enroute processed data
+        if (processedData.enrouteWeather) {
+            const legsWeather = processedData.enrouteWeather.map(leg => ({
+                upperwinds: Cleaner.enrouteUpperWinds(
+                    leg.upperwind.map(item => ({
+                        aerodromeCode: item.aerodromeCode,
+                        nauticalMilesFromTarget: item.nauticalMilesFromTarget,
+                        dateFrom: item.dateFrom,
+                        dateTo: item.dateTo || new Date(),
+                        flightWithinForecast: item.flightWithinForecast,
+                        dataPerAltitude: Interpreter.readUpperWinds(item.data) || []
+                    })), 
+                    leg.altitude, 
+                    leg.dateTimeAt
+                ), 
+                altimeters: Cleaner.enrouteMETAR(leg.metar.map(metar => ({
+                    aerodromeCode: metar.aerodromeCode,
+                    nauticalMilesFromTarget: metar.nauticalMilesFromTarget,
+                    date: metar.dateFrom,
+                    altimeter: Interpreter.extractAltimeterFromMETAR(metar.data)
+                })))
             }))
-        }))
+
+            weatherData.enrouteWeather = legsWeather.map(leg => ({
+                wind_magnitude_knot: leg.upperwinds.find(item => item.wind)?.wind?.knots || 0,
+                wind_direction: leg.upperwinds.find(item => item.wind)?.wind?.degreesTrue || 0,
+                temperature_c: leg.upperwinds.find(item => item.temperature)?.temperature || 0,
+                altimeter_inhg: leg.altimeters[0].altimeter
+            }))
+        }
 
         // Interprete and clean landing processed data
         if (processedData.landingWeather) {

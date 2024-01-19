@@ -32,7 +32,7 @@ export interface TAFWindSummary {
     groups: ChangeGroup[]
 }
 
-interface UpperwindPerAltitude {
+export interface UpperwindPerAltitude {
     altitude: number;
     forecast?: {
         temperature?: number;
@@ -183,6 +183,8 @@ class Interpreter {
                                     degreesTrue
                                 }
                             }
+                        } else {
+                            upperwindArray[idx].forecast = {wind: {knots: 0, degreesTrue: 0}}
                         }
                         const temperature = parseInt(item.temperature || "")
                         if (!Number.isNaN(temperature)) {

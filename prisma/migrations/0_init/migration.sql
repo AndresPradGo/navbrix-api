@@ -178,14 +178,6 @@ CREATE TABLE `fd_forecasts` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `date_from` DATETIME(0) NOT NULL,
     `date_to` DATETIME(0) NOT NULL,
-    `altitude_ft_1` INTEGER NOT NULL,
-    `wind_direction_1` INTEGER NULL,
-    `wind_magnitude_knot_1` INTEGER NOT NULL,
-    `temperature_c_1` INTEGER NOT NULL,
-    `altitude_ft_2` INTEGER NOT NULL,
-    `wind_direction_2` INTEGER NULL,
-    `wind_magnitude_knot_2` INTEGER NOT NULL,
-    `temperature_c_2` INTEGER NOT NULL,
     `enroute_weather_id` INTEGER NOT NULL,
     `aerodrome_id` INTEGER NOT NULL,
     `created_at` DATETIME(0) NOT NULL,
@@ -577,6 +569,21 @@ CREATE TABLE `weight_balance_profiles` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `fds_at_altitude` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `altitude_ft` INTEGER NOT NULL,
+    `wind_direction` INTEGER NULL,
+    `wind_magnitude_knot` INTEGER NULL,
+    `temperature_c` INTEGER NULL,
+    `fd_forecasts_id` INTEGER NOT NULL,
+    `created_at` DATETIME(0) NOT NULL,
+    `last_updated` DATETIME(0) NOT NULL,
+
+    INDEX `fd_forecasts_id`(`fd_forecasts_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `aerodrome_weather_reports` ADD CONSTRAINT `aerodrome_weather_reports_ibfk_1` FOREIGN KEY (`departure_id`) REFERENCES `departures`(`flight_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -729,4 +736,7 @@ ALTER TABLE `weight_balance_limits` ADD CONSTRAINT `weight_balance_limits_ibfk_1
 
 -- AddForeignKey
 ALTER TABLE `weight_balance_profiles` ADD CONSTRAINT `weight_balance_profiles_ibfk_1` FOREIGN KEY (`performance_profile_id`) REFERENCES `performance_profiles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `fds_at_altitude` ADD CONSTRAINT `fds_at_altitude_ibfk_1` FOREIGN KEY (`fd_forecasts_id`) REFERENCES `fd_forecasts`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
