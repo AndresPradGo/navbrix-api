@@ -2,8 +2,8 @@
 CREATE TABLE `aerodrome_status` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `status` VARCHAR(50) NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `status`(`status`),
     PRIMARY KEY (`id`)
@@ -15,11 +15,11 @@ CREATE TABLE `aerodrome_weather_reports` (
     `date` DATETIME(0) NOT NULL,
     `departure_id` INTEGER NULL,
     `arrival_id` INTEGER NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
-    INDEX `arrival_id`(`arrival_id`),
-    INDEX `departure_id`(`departure_id`),
+    UNIQUE INDEX `departure_id`(`departure_id`),
+    UNIQUE INDEX `arrival_id`(`arrival_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -33,8 +33,8 @@ CREATE TABLE `aerodromes` (
     `has_fds` BOOLEAN NOT NULL,
     `elevation_ft` INTEGER NOT NULL,
     `status_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `vfr_waypoint_id`(`vfr_waypoint_id`),
     UNIQUE INDEX `user_waypoint_id`(`user_waypoint_id`),
@@ -50,8 +50,8 @@ CREATE TABLE `aircraft` (
     `abbreviation` VARCHAR(10) NOT NULL,
     `registration` VARCHAR(50) NOT NULL,
     `owner_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `owner_id`(`owner_id`),
     PRIMARY KEY (`id`)
@@ -68,8 +68,8 @@ CREATE TABLE `arrivals` (
     `wind_last_updated` DATETIME(0) NULL,
     `altimeter_last_updated` DATETIME(0) NULL,
     `aerodrome_id` INTEGER NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `flight_id`(`flight_id`),
     INDEX `aerodrome_id`(`aerodrome_id`),
@@ -83,8 +83,8 @@ CREATE TABLE `baggage_compartments` (
     `arm_in` DECIMAL(6, 2) NOT NULL,
     `weight_limit_lb` DECIMAL(6, 2) NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -97,8 +97,8 @@ CREATE TABLE `baggages` (
     `weight_lb` DECIMAL(5, 2) NOT NULL,
     `flight_id` INTEGER NOT NULL,
     `baggage_compartment_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `baggage_compartment_id`(`baggage_compartment_id`),
     INDEX `flight_id`(`flight_id`),
@@ -117,8 +117,8 @@ CREATE TABLE `climb_performance_data` (
     `fuel_gal` DECIMAL(4, 2) NOT NULL,
     `distance_nm` INTEGER NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -135,8 +135,8 @@ CREATE TABLE `cruise_performance_data` (
     `ktas` INTEGER NOT NULL,
     `gph` DECIMAL(6, 2) NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -153,8 +153,8 @@ CREATE TABLE `departures` (
     `wind_last_updated` DATETIME(0) NULL,
     `altimeter_last_updated` DATETIME(0) NULL,
     `aerodrome_id` INTEGER NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `flight_id`(`flight_id`),
     INDEX `aerodrome_id`(`aerodrome_id`),
@@ -163,13 +163,12 @@ CREATE TABLE `departures` (
 
 -- CreateTable
 CREATE TABLE `enroute_weather_reports` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` INTEGER NOT NULL,
     `date` DATETIME(0) NOT NULL,
-    `leg_id` INTEGER NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
-    UNIQUE INDEX `leg_id`(`leg_id`),
+    UNIQUE INDEX `id`(`id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -180,8 +179,8 @@ CREATE TABLE `fd_forecasts` (
     `date_to` DATETIME(0) NOT NULL,
     `enroute_weather_id` INTEGER NOT NULL,
     `aerodrome_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `aerodrome_id`(`aerodrome_id`),
     INDEX `enroute_weather_id`(`enroute_weather_id`),
@@ -196,8 +195,8 @@ CREATE TABLE `flight_waypoints` (
     `from_user_waypoint` BOOLEAN NOT NULL,
     `from_vfr_waypoint` BOOLEAN NOT NULL,
     `leg_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `waypoint_id`(`waypoint_id`),
     INDEX `leg_id`(`leg_id`),
@@ -216,8 +215,8 @@ CREATE TABLE `flights` (
     `alternate_radius_nm` INTEGER NOT NULL,
     `aircraft_id` INTEGER NULL,
     `pilot_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `aircraft_id`(`aircraft_id`),
     INDEX `pilot_id`(`pilot_id`),
@@ -230,8 +229,8 @@ CREATE TABLE `fuel` (
     `gallons` DECIMAL(5, 2) NOT NULL,
     `flight_id` INTEGER NOT NULL,
     `fuel_tank_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `flight_id`(`flight_id`),
     INDEX `fuel_tank_id`(`fuel_tank_id`),
@@ -247,8 +246,8 @@ CREATE TABLE `fuel_tanks` (
     `unusable_fuel_gallons` DECIMAL(5, 2) NOT NULL,
     `burn_sequence` INTEGER NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -259,8 +258,8 @@ CREATE TABLE `fuel_types` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(50) NOT NULL,
     `density_lb_gal` DECIMAL(4, 2) NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `name`(`name`),
     PRIMARY KEY (`id`)
@@ -275,8 +274,8 @@ CREATE TABLE `landing_performance_data` (
     `groundroll_ft` INTEGER NOT NULL,
     `obstacle_clearance_ft` INTEGER NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -295,8 +294,8 @@ CREATE TABLE `legs` (
     `wind_last_updated` DATETIME(0) NULL,
     `altimeter_last_updated` DATETIME(0) NULL,
     `flight_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `flight_id`(`flight_id`),
     PRIMARY KEY (`id`)
@@ -307,12 +306,12 @@ CREATE TABLE `metar_reports` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `date` DATETIME(0) NOT NULL,
     `altimeter_inhg` DECIMAL(4, 2) NOT NULL,
-    `temperature_c` INTEGER NOT NULL,
+    `temperature_c` INTEGER NULL,
     `aerodrome_weather_id` INTEGER NULL,
     `enroute_weather_id` INTEGER NULL,
     `aerodrome_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `aerodrome_id`(`aerodrome_id`),
     INDEX `aerodrome_weather_id`(`aerodrome_weather_id`),
@@ -326,8 +325,8 @@ CREATE TABLE `passenger_profiles` (
     `name` VARCHAR(255) NOT NULL,
     `weight_lb` DECIMAL(5, 2) NOT NULL,
     `creator_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `creator_id`(`creator_id`),
     PRIMARY KEY (`id`)
@@ -353,8 +352,8 @@ CREATE TABLE `performance_profiles` (
     `is_preferred` BOOLEAN NOT NULL,
     `fuel_type_id` INTEGER NULL,
     `aircraft_id` INTEGER NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `aircraft_id`(`aircraft_id`),
     INDEX `fuel_type_id`(`fuel_type_id`),
@@ -371,8 +370,8 @@ CREATE TABLE `persons_on_board` (
     `seat_row_id` INTEGER NOT NULL,
     `user_id` INTEGER NULL,
     `passenger_profile_id` INTEGER NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `flight_id`(`flight_id`),
     INDEX `passenger_profile_id`(`passenger_profile_id`),
@@ -385,8 +384,8 @@ CREATE TABLE `persons_on_board` (
 CREATE TABLE `runway_surfaces` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `surface` VARCHAR(50) NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `surface`(`surface`),
     PRIMARY KEY (`id`)
@@ -402,8 +401,8 @@ CREATE TABLE `runways` (
     `position` VARCHAR(1) NULL,
     `surface_id` INTEGER NOT NULL,
     `aerodrome_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `aerodrome_id`(`aerodrome_id`),
     INDEX `surface_id`(`surface_id`),
@@ -418,8 +417,8 @@ CREATE TABLE `seat_rows` (
     `weight_limit_lb` DECIMAL(6, 2) NULL,
     `number_of_seats` INTEGER NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -432,8 +431,8 @@ CREATE TABLE `surfaces_performance_decrease` (
     `is_takeoff` BOOLEAN NOT NULL,
     `surface_id` INTEGER NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     INDEX `surface_id`(`surface_id`),
@@ -452,8 +451,8 @@ CREATE TABLE `taf_forecasts` (
     `gust_factor_knot` INTEGER NULL,
     `aerodrome_weather_id` INTEGER NOT NULL,
     `aerodrome_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `aerodrome_id`(`aerodrome_id`),
     INDEX `aerodrome_weather_id`(`aerodrome_weather_id`),
@@ -469,8 +468,8 @@ CREATE TABLE `takeoff_performance_data` (
     `groundroll_ft` INTEGER NOT NULL,
     `obstacle_clearance_ft` INTEGER NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -482,8 +481,8 @@ CREATE TABLE `user_waypoints` (
     `code` VARCHAR(12) NOT NULL,
     `name` VARCHAR(50) NOT NULL,
     `creator_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `waypoint_id`(`waypoint_id`),
     INDEX `creator_id`(`creator_id`),
@@ -501,8 +500,8 @@ CREATE TABLE `users` (
     `is_admin` BOOLEAN NOT NULL,
     `is_master` BOOLEAN NOT NULL,
     `is_trial` BOOLEAN NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `email`(`email`),
     PRIMARY KEY (`id`)
@@ -515,8 +514,8 @@ CREATE TABLE `vfr_waypoints` (
     `name` VARCHAR(255) NOT NULL,
     `hidden` BOOLEAN NOT NULL,
     `creator_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     UNIQUE INDEX `waypoint_id`(`waypoint_id`),
     UNIQUE INDEX `code`(`code`),
@@ -537,8 +536,8 @@ CREATE TABLE `waypoints` (
     `lon_direction` VARCHAR(1) NOT NULL,
     `magnetic_variation` DECIMAL(4, 2) NULL,
     `in_north_airspace` BOOLEAN NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -550,8 +549,8 @@ CREATE TABLE `weight_balance_limits` (
     `weight_lb` DECIMAL(7, 2) NOT NULL,
     `sequence` INTEGER NOT NULL,
     `weight_balance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `weight_balance_profile_id`(`weight_balance_profile_id`),
     PRIMARY KEY (`id`)
@@ -562,8 +561,8 @@ CREATE TABLE `weight_balance_profiles` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(50) NOT NULL,
     `performance_profile_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `performance_profile_id`(`performance_profile_id`),
     PRIMARY KEY (`id`)
@@ -577,8 +576,8 @@ CREATE TABLE `fds_at_altitude` (
     `wind_magnitude_knot` INTEGER NULL,
     `temperature_c` INTEGER NULL,
     `fd_forecasts_id` INTEGER NOT NULL,
-    `created_at` DATETIME(0) NOT NULL,
-    `last_updated` DATETIME(0) NOT NULL,
+    `created_at` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_updated` DATETIME(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 
     INDEX `fd_forecasts_id`(`fd_forecasts_id`),
     PRIMARY KEY (`id`)
@@ -630,7 +629,7 @@ ALTER TABLE `departures` ADD CONSTRAINT `departures_ibfk_1` FOREIGN KEY (`flight
 ALTER TABLE `departures` ADD CONSTRAINT `departures_ibfk_2` FOREIGN KEY (`aerodrome_id`) REFERENCES `aerodromes`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `enroute_weather_reports` ADD CONSTRAINT `enroute_weather_reports_ibfk_1` FOREIGN KEY (`leg_id`) REFERENCES `legs`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `enroute_weather_reports` ADD CONSTRAINT `enroute_weather_reports_ibfk_1` FOREIGN KEY (`id`) REFERENCES `legs`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `fd_forecasts` ADD CONSTRAINT `fd_forecasts_ibfk_1` FOREIGN KEY (`enroute_weather_id`) REFERENCES `enroute_weather_reports`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

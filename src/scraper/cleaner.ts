@@ -104,7 +104,7 @@ class Cleaner {
                 degreesRange: selectedWindData.degreesRange,
             } as AerodromeWind
         }) 
-
+        
         return selectedData
     }
 
@@ -266,7 +266,7 @@ class Cleaner {
             let isPrevious = false
             const permanentGorupIdx = data.findIndex((group, idx) => {
                 if (group.type === 'BECMG') {
-                    if (group.dateFrom <= dateTimeAt &&  dateTimeAt <= group.transitionDate) {
+                    if (group.dateFrom <= dateTimeAt &&  dateTimeAt < group.transitionDate) {
                         const prevWind = data[idx - 1].groups[0].wind
                         const currentWind = group.groups[0].wind
                         const prevWindMagnitude = prevWind.gustKnots ? prevWind.gustKnots : prevWind.knots
@@ -275,9 +275,9 @@ class Cleaner {
                         return true
 
                     }
-                    return group.transitionDate <= dateTimeAt &&  dateTimeAt <= group.dateTo 
+                    return group.transitionDate <= dateTimeAt &&  dateTimeAt < group.dateTo 
                 }
-                return group.dateFrom <= dateTimeAt &&  dateTimeAt <= group.dateTo
+                return group.dateFrom <= dateTimeAt &&  dateTimeAt < group.dateTo
             })
             if (permanentGorupIdx >= 0) {
                 if (isPrevious) {

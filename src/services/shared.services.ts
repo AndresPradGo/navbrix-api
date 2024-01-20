@@ -36,6 +36,7 @@ export const  getUserFlight = async (flightId: number, userEmail: string): Promi
 }
 
 interface Aerodrome {
+    id: number;
     code: string,
     has_taf: boolean,
     has_metar: boolean,
@@ -55,6 +56,7 @@ export const getOfficialAerodromes = async (codes: string[]): Promise<Aerodrome[
     })
 
     return aerodromes.map(a => (a && a.vfr_waypoints ? {
+        id: a.id,
         code: a.vfr_waypoints.code,
         has_taf: a.has_taf,
         has_metar: a.has_metar,

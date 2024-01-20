@@ -10,25 +10,22 @@ datasource db {
 model aerodrome_status {
   id           Int          @id @default(autoincrement())
   status       String       @unique(map: "status") @db.VarChar(50)
-  created_at   DateTime     @db.DateTime(0)
-  last_updated DateTime     @db.DateTime(0)
+  created_at   DateTime     @default(now()) @db.DateTime(0)
+  last_updated DateTime     @default(now()) @db.DateTime(0)
   aerodromes   aerodromes[]
 }
 
 model aerodrome_weather_reports {
   id            Int             @id @default(autoincrement())
   date          DateTime        @db.DateTime(0)
-  departure_id  Int?
-  arrival_id    Int?
-  created_at    DateTime        @db.DateTime(0)
-  last_updated  DateTime        @db.DateTime(0)
+  departure_id  Int?            @unique(map: "departure_id")
+  arrival_id    Int?            @unique(map: "arrival_id")
+  created_at    DateTime        @default(now()) @db.DateTime(0)
+  last_updated  DateTime        @default(now()) @db.DateTime(0)
   departures    departures?     @relation(fields: [departure_id], references: [flight_id], onDelete: Cascade, map: "aerodrome_weather_reports_ibfk_1")
   arrivals      arrivals?       @relation(fields: [arrival_id], references: [flight_id], onDelete: Cascade, map: "aerodrome_weather_reports_ibfk_2")
   metar_reports metar_reports[]
   taf_forecasts taf_forecasts[]
-
-  @@index([arrival_id], map: "arrival_id")
-  @@index([departure_id], map: "departure_id")
 }
 
 model aerodromes {
@@ -40,8 +37,8 @@ model aerodromes {
   has_fds          Boolean
   elevation_ft     Int
   status_id        Int
-  created_at       DateTime         @db.DateTime(0)
-  last_updated     DateTime         @db.DateTime(0)
+  created_at       DateTime         @default(now()) @db.DateTime(0)
+  last_updated     DateTime         @default(now()) @db.DateTime(0)
   vfr_waypoints    vfr_waypoints?   @relation(fields: [vfr_waypoint_id], references: [waypoint_id], onDelete: Cascade, map: "aerodromes_ibfk_1")
   user_waypoints   user_waypoints?  @relation(fields: [user_waypoint_id], references: [waypoint_id], onDelete: Cascade, map: "aerodromes_ibfk_2")
   aerodrome_status aerodrome_status @relation(fields: [status_id], references: [id], map: "aerodromes_ibfk_3")
@@ -62,8 +59,8 @@ model aircraft {
   abbreviation         String                 @db.VarChar(10)
   registration         String                 @db.VarChar(50)
   owner_id             Int
-  created_at           DateTime               @db.DateTime(0)
-  last_updated         DateTime               @db.DateTime(0)
+  created_at           DateTime               @default(now()) @db.DateTime(0)
+  last_updated         DateTime               @default(now()) @db.DateTime(0)
   users                users                  @relation(fields: [owner_id], references: [id], onDelete: Cascade, map: "aircraft_ibfk_1")
   flights              flights[]
   performance_profiles performance_profiles[]
@@ -72,20 +69,20 @@ model aircraft {
 }
 
 model arrivals {
-  flight_id                 Int                         @id @unique(map: "flight_id")
+  flight_id                 Int                        @id @unique(map: "flight_id")
   temperature_c             Int
   wind_direction            Int?
   wind_magnitude_knot       Int
-  altimeter_inhg            Decimal                     @db.Decimal(4, 2)
-  temperature_last_updated  DateTime?                   @db.DateTime(0)
-  wind_last_updated         DateTime?                   @db.DateTime(0)
-  altimeter_last_updated    DateTime?                   @db.DateTime(0)
+  altimeter_inhg            Decimal                    @db.Decimal(4, 2)
+  temperature_last_updated  DateTime?                  @db.DateTime(0)
+  wind_last_updated         DateTime?                  @db.DateTime(0)
+  altimeter_last_updated    DateTime?                  @db.DateTime(0)
   aerodrome_id              Int?
-  created_at                DateTime                    @db.DateTime(0)
-  last_updated              DateTime                    @db.DateTime(0)
-  aerodrome_weather_reports aerodrome_weather_reports[]
-  flights                   flights                     @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "arrivals_ibfk_1")
-  aerodromes                aerodromes?                 @relation(fields: [aerodrome_id], references: [id], map: "arrivals_ibfk_2")
+  created_at                DateTime                   @default(now()) @db.DateTime(0)
+  last_updated              DateTime                   @default(now()) @db.DateTime(0)
+  aerodrome_weather_reports aerodrome_weather_reports?
+  flights                   flights                    @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "arrivals_ibfk_1")
+  aerodromes                aerodromes?                @relation(fields: [aerodrome_id], references: [id], map: "arrivals_ibfk_2")
 
   @@index([aerodrome_id], map: "aerodrome_id")
 }
@@ -96,8 +93,8 @@ model baggage_compartments {
   arm_in                 Decimal              @db.Decimal(6, 2)
   weight_limit_lb        Decimal?             @db.Decimal(6, 2)
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "baggage_compartments_ibfk_1")
   baggages               baggages[]
 
@@ -110,8 +107,8 @@ model baggages {
   weight_lb              Decimal              @db.Decimal(5, 2)
   flight_id              Int
   baggage_compartment_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   flights                flights              @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "baggages_ibfk_1")
   baggage_compartments   baggage_compartments @relation(fields: [baggage_compartment_id], references: [id], onDelete: Cascade, map: "baggages_ibfk_2")
 
@@ -130,8 +127,8 @@ model climb_performance_data {
   fuel_gal               Decimal              @db.Decimal(4, 2)
   distance_nm            Int
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "climb_performance_data_ibfk_1")
 
   @@index([performance_profile_id], map: "performance_profile_id")
@@ -147,39 +144,38 @@ model cruise_performance_data {
   ktas                   Int
   gph                    Decimal              @db.Decimal(6, 2)
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "cruise_performance_data_ibfk_1")
 
   @@index([performance_profile_id], map: "performance_profile_id")
 }
 
 model departures {
-  flight_id                 Int                         @id @unique(map: "flight_id")
+  flight_id                 Int                        @id @unique(map: "flight_id")
   temperature_c             Int
   wind_direction            Int?
   wind_magnitude_knot       Int
-  altimeter_inhg            Decimal                     @db.Decimal(4, 2)
-  temperature_last_updated  DateTime?                   @db.DateTime(0)
-  wind_last_updated         DateTime?                   @db.DateTime(0)
-  altimeter_last_updated    DateTime?                   @db.DateTime(0)
+  altimeter_inhg            Decimal                    @db.Decimal(4, 2)
+  temperature_last_updated  DateTime?                  @db.DateTime(0)
+  wind_last_updated         DateTime?                  @db.DateTime(0)
+  altimeter_last_updated    DateTime?                  @db.DateTime(0)
   aerodrome_id              Int?
-  created_at                DateTime                    @db.DateTime(0)
-  last_updated              DateTime                    @db.DateTime(0)
-  aerodrome_weather_reports aerodrome_weather_reports[]
-  flights                   flights                     @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "departures_ibfk_1")
-  aerodromes                aerodromes?                 @relation(fields: [aerodrome_id], references: [id], map: "departures_ibfk_2")
+  created_at                DateTime                   @default(now()) @db.DateTime(0)
+  last_updated              DateTime                   @default(now()) @db.DateTime(0)
+  aerodrome_weather_reports aerodrome_weather_reports?
+  flights                   flights                    @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "departures_ibfk_1")
+  aerodromes                aerodromes?                @relation(fields: [aerodrome_id], references: [id], map: "departures_ibfk_2")
 
   @@index([aerodrome_id], map: "aerodrome_id")
 }
 
 model enroute_weather_reports {
-  id            Int             @id @default(autoincrement())
+  id            Int             @id @unique(map: "id")
   date          DateTime        @db.DateTime(0)
-  leg_id        Int?            @unique(map: "leg_id")
-  created_at    DateTime        @db.DateTime(0)
-  last_updated  DateTime        @db.DateTime(0)
-  legs          legs?           @relation(fields: [leg_id], references: [id], onDelete: Cascade, map: "enroute_weather_reports_ibfk_1")
+  created_at    DateTime        @default(now()) @db.DateTime(0)
+  last_updated  DateTime        @default(now()) @db.DateTime(0)
+  legs          legs            @relation(fields: [id], references: [id], onDelete: Cascade, map: "enroute_weather_reports_ibfk_1")
   fd_forecasts  fd_forecasts[]
   metar_reports metar_reports[]
 }
@@ -190,8 +186,8 @@ model fd_forecasts {
   date_to                 DateTime                @db.DateTime(0)
   enroute_weather_id      Int
   aerodrome_id            Int
-  created_at              DateTime                @db.DateTime(0)
-  last_updated            DateTime                @db.DateTime(0)
+  created_at              DateTime                @default(now()) @db.DateTime(0)
+  last_updated            DateTime                @default(now()) @db.DateTime(0)
   enroute_weather_reports enroute_weather_reports @relation(fields: [enroute_weather_id], references: [id], onDelete: Cascade, map: "fd_forecasts_ibfk_1")
   aerodromes              aerodromes              @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "fd_forecasts_ibfk_2")
   fds_at_altitude         fds_at_altitude[]
@@ -207,8 +203,8 @@ model flight_waypoints {
   from_user_waypoint Boolean
   from_vfr_waypoint  Boolean
   leg_id             Int
-  created_at         DateTime  @db.DateTime(0)
-  last_updated       DateTime  @db.DateTime(0)
+  created_at         DateTime  @default(now()) @db.DateTime(0)
+  last_updated       DateTime  @default(now()) @db.DateTime(0)
   waypoints          waypoints @relation(fields: [waypoint_id], references: [id], map: "flight_waypoints_ibfk_1")
   legs               legs      @relation(fields: [leg_id], references: [id], onDelete: Cascade, map: "flight_waypoints_ibfk_2")
 
@@ -226,8 +222,8 @@ model flights {
   alternate_radius_nm      Int
   aircraft_id              Int?
   pilot_id                 Int
-  created_at               DateTime           @db.DateTime(0)
-  last_updated             DateTime           @db.DateTime(0)
+  created_at               DateTime           @default(now()) @db.DateTime(0)
+  last_updated             DateTime           @default(now()) @db.DateTime(0)
   arrivals                 arrivals?
   baggages                 baggages[]
   departures               departures?
@@ -246,8 +242,8 @@ model fuel {
   gallons      Decimal    @db.Decimal(5, 2)
   flight_id    Int
   fuel_tank_id Int
-  created_at   DateTime   @db.DateTime(0)
-  last_updated DateTime   @db.DateTime(0)
+  created_at   DateTime   @default(now()) @db.DateTime(0)
+  last_updated DateTime   @default(now()) @db.DateTime(0)
   flights      flights    @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "fuel_ibfk_1")
   fuel_tanks   fuel_tanks @relation(fields: [fuel_tank_id], references: [id], onDelete: Cascade, map: "fuel_ibfk_2")
 
@@ -263,8 +259,8 @@ model fuel_tanks {
   unusable_fuel_gallons  Decimal              @db.Decimal(5, 2)
   burn_sequence          Int
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   fuel                   fuel[]
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "fuel_tanks_ibfk_1")
 
@@ -275,8 +271,8 @@ model fuel_types {
   id                   Int                    @id @default(autoincrement())
   name                 String                 @unique(map: "name") @db.VarChar(50)
   density_lb_gal       Decimal                @db.Decimal(4, 2)
-  created_at           DateTime               @db.DateTime(0)
-  last_updated         DateTime               @db.DateTime(0)
+  created_at           DateTime               @default(now()) @db.DateTime(0)
+  last_updated         DateTime               @default(now()) @db.DateTime(0)
   performance_profiles performance_profiles[]
 }
 
@@ -288,8 +284,8 @@ model landing_performance_data {
   groundroll_ft          Int
   obstacle_clearance_ft  Int
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "landing_performance_data_ibfk_1")
 
   @@index([performance_profile_id], map: "performance_profile_id")
@@ -307,8 +303,8 @@ model legs {
   wind_last_updated        DateTime?                @db.DateTime(0)
   altimeter_last_updated   DateTime?                @db.DateTime(0)
   flight_id                Int
-  created_at               DateTime                 @db.DateTime(0)
-  last_updated             DateTime                 @db.DateTime(0)
+  created_at               DateTime                 @default(now()) @db.DateTime(0)
+  last_updated             DateTime                 @default(now()) @db.DateTime(0)
   enroute_weather_reports  enroute_weather_reports?
   flight_waypoints         flight_waypoints[]
   flights                  flights                  @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "legs_ibfk_1")
@@ -320,12 +316,12 @@ model metar_reports {
   id                        Int                        @id @default(autoincrement())
   date                      DateTime                   @db.DateTime(0)
   altimeter_inhg            Decimal                    @db.Decimal(4, 2)
-  temperature_c             Int
+  temperature_c             Int?
   aerodrome_weather_id      Int?
   enroute_weather_id        Int?
   aerodrome_id              Int
-  created_at                DateTime                   @db.DateTime(0)
-  last_updated              DateTime                   @db.DateTime(0)
+  created_at                DateTime                   @default(now()) @db.DateTime(0)
+  last_updated              DateTime                   @default(now()) @db.DateTime(0)
   aerodrome_weather_reports aerodrome_weather_reports? @relation(fields: [aerodrome_weather_id], references: [id], onDelete: Cascade, map: "metar_reports_ibfk_1")
   enroute_weather_reports   enroute_weather_reports?   @relation(fields: [enroute_weather_id], references: [id], onDelete: Cascade, map: "metar_reports_ibfk_2")
   aerodromes                aerodromes                 @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "metar_reports_ibfk_3")
@@ -340,8 +336,8 @@ model passenger_profiles {
   name             String             @db.VarChar(255)
   weight_lb        Decimal            @db.Decimal(5, 2)
   creator_id       Int
-  created_at       DateTime           @db.DateTime(0)
-  last_updated     DateTime           @db.DateTime(0)
+  created_at       DateTime           @default(now()) @db.DateTime(0)
+  last_updated     DateTime           @default(now()) @db.DateTime(0)
   users            users              @relation(fields: [creator_id], references: [id], onDelete: Cascade, map: "passenger_profiles_ibfk_1")
   persons_on_board persons_on_board[]
 
@@ -367,8 +363,8 @@ model performance_profiles {
   is_preferred                           Boolean
   fuel_type_id                           Int?
   aircraft_id                            Int?
-  created_at                             DateTime                        @db.DateTime(0)
-  last_updated                           DateTime                        @db.DateTime(0)
+  created_at                             DateTime                        @default(now()) @db.DateTime(0)
+  last_updated                           DateTime                        @default(now()) @db.DateTime(0)
   baggage_compartments                   baggage_compartments[]
   climb_performance_data                 climb_performance_data[]
   cruise_performance_data                cruise_performance_data[]
@@ -394,8 +390,8 @@ model persons_on_board {
   seat_row_id          Int
   user_id              Int?
   passenger_profile_id Int?
-  created_at           DateTime            @db.DateTime(0)
-  last_updated         DateTime            @db.DateTime(0)
+  created_at           DateTime            @default(now()) @db.DateTime(0)
+  last_updated         DateTime            @default(now()) @db.DateTime(0)
   flights              flights?            @relation(fields: [flight_id], references: [id], onDelete: Cascade, map: "persons_on_board_ibfk_1")
   seat_rows            seat_rows           @relation(fields: [seat_row_id], references: [id], onDelete: Cascade, map: "persons_on_board_ibfk_2")
   users                users?              @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "persons_on_board_ibfk_3")
@@ -410,8 +406,8 @@ model persons_on_board {
 model runway_surfaces {
   id                            Int                             @id @default(autoincrement())
   surface                       String                          @unique(map: "surface") @db.VarChar(50)
-  created_at                    DateTime                        @db.DateTime(0)
-  last_updated                  DateTime                        @db.DateTime(0)
+  created_at                    DateTime                        @default(now()) @db.DateTime(0)
+  last_updated                  DateTime                        @default(now()) @db.DateTime(0)
   runways                       runways[]
   surfaces_performance_decrease surfaces_performance_decrease[]
 }
@@ -425,8 +421,8 @@ model runways {
   position                         String?         @db.VarChar(1)
   surface_id                       Int
   aerodrome_id                     Int
-  created_at                       DateTime        @db.DateTime(0)
-  last_updated                     DateTime        @db.DateTime(0)
+  created_at                       DateTime        @default(now()) @db.DateTime(0)
+  last_updated                     DateTime        @default(now()) @db.DateTime(0)
   runway_surfaces                  runway_surfaces @relation(fields: [surface_id], references: [id], map: "runways_ibfk_1")
   aerodromes                       aerodromes      @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "runways_ibfk_2")
 
@@ -441,8 +437,8 @@ model seat_rows {
   weight_limit_lb        Decimal?             @db.Decimal(6, 2)
   number_of_seats        Int
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   persons_on_board       persons_on_board[]
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "seat_rows_ibfk_1")
 
@@ -455,8 +451,8 @@ model surfaces_performance_decrease {
   is_takeoff             Boolean
   surface_id             Int
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   runway_surfaces        runway_surfaces      @relation(fields: [surface_id], references: [id], map: "surfaces_performance_decrease_ibfk_1")
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "surfaces_performance_decrease_ibfk_2")
 
@@ -475,8 +471,8 @@ model taf_forecasts {
   gust_factor_knot          Int?
   aerodrome_weather_id      Int
   aerodrome_id              Int
-  created_at                DateTime                  @db.DateTime(0)
-  last_updated              DateTime                  @db.DateTime(0)
+  created_at                DateTime                  @default(now()) @db.DateTime(0)
+  last_updated              DateTime                  @default(now()) @db.DateTime(0)
   aerodrome_weather_reports aerodrome_weather_reports @relation(fields: [aerodrome_weather_id], references: [id], onDelete: Cascade, map: "taf_forecasts_ibfk_1")
   aerodromes                aerodromes                @relation(fields: [aerodrome_id], references: [id], onDelete: Cascade, map: "taf_forecasts_ibfk_2")
 
@@ -492,8 +488,8 @@ model takeoff_performance_data {
   groundroll_ft          Int
   obstacle_clearance_ft  Int
   performance_profile_id Int
-  created_at             DateTime             @db.DateTime(0)
-  last_updated           DateTime             @db.DateTime(0)
+  created_at             DateTime             @default(now()) @db.DateTime(0)
+  last_updated           DateTime             @default(now()) @db.DateTime(0)
   performance_profiles   performance_profiles @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "takeoff_performance_data_ibfk_1")
 
   @@index([performance_profile_id], map: "performance_profile_id")
@@ -504,8 +500,8 @@ model user_waypoints {
   code         String      @db.VarChar(12)
   name         String      @db.VarChar(50)
   creator_id   Int
-  created_at   DateTime    @db.DateTime(0)
-  last_updated DateTime    @db.DateTime(0)
+  created_at   DateTime    @default(now()) @db.DateTime(0)
+  last_updated DateTime    @default(now()) @db.DateTime(0)
   aerodromes   aerodromes?
   waypoints    waypoints   @relation(fields: [waypoint_id], references: [id], onDelete: Cascade, map: "user_waypoints_ibfk_1")
   users        users       @relation(fields: [creator_id], references: [id], onDelete: Cascade, map: "user_waypoints_ibfk_2")
@@ -523,8 +519,8 @@ model users {
   is_admin           Boolean
   is_master          Boolean
   is_trial           Boolean
-  created_at         DateTime             @db.DateTime(0)
-  last_updated       DateTime             @db.DateTime(0)
+  created_at         DateTime             @default(now()) @db.DateTime(0)
+  last_updated       DateTime             @default(now()) @db.DateTime(0)
   aircraft           aircraft[]
   flights            flights[]
   passenger_profiles passenger_profiles[]
@@ -539,8 +535,8 @@ model vfr_waypoints {
   name         String      @db.VarChar(255)
   hidden       Boolean
   creator_id   Int
-  created_at   DateTime    @db.DateTime(0)
-  last_updated DateTime    @db.DateTime(0)
+  created_at   DateTime    @default(now()) @db.DateTime(0)
+  last_updated DateTime    @default(now()) @db.DateTime(0)
   aerodromes   aerodromes?
   waypoints    waypoints   @relation(fields: [waypoint_id], references: [id], onDelete: Cascade, map: "vfr_waypoints_ibfk_1")
   users        users       @relation(fields: [creator_id], references: [id], onDelete: Cascade, map: "vfr_waypoints_ibfk_2")
@@ -560,8 +556,8 @@ model waypoints {
   lon_direction      String            @db.VarChar(1)
   magnetic_variation Decimal?          @db.Decimal(4, 2)
   in_north_airspace  Boolean
-  created_at         DateTime          @db.DateTime(0)
-  last_updated       DateTime          @db.DateTime(0)
+  created_at         DateTime          @default(now()) @db.DateTime(0)
+  last_updated       DateTime          @default(now()) @db.DateTime(0)
   flight_waypoints   flight_waypoints?
   user_waypoints     user_waypoints?
   vfr_waypoints      vfr_waypoints?
@@ -573,8 +569,8 @@ model weight_balance_limits {
   weight_lb                 Decimal                 @db.Decimal(7, 2)
   sequence                  Int
   weight_balance_profile_id Int
-  created_at                DateTime                @db.DateTime(0)
-  last_updated              DateTime                @db.DateTime(0)
+  created_at                DateTime                @default(now()) @db.DateTime(0)
+  last_updated              DateTime                @default(now()) @db.DateTime(0)
   weight_balance_profiles   weight_balance_profiles @relation(fields: [weight_balance_profile_id], references: [id], onDelete: Cascade, map: "weight_balance_limits_ibfk_1")
 
   @@index([weight_balance_profile_id], map: "weight_balance_profile_id")
@@ -584,8 +580,8 @@ model weight_balance_profiles {
   id                     Int                     @id @default(autoincrement())
   name                   String                  @db.VarChar(50)
   performance_profile_id Int
-  created_at             DateTime                @db.DateTime(0)
-  last_updated           DateTime                @db.DateTime(0)
+  created_at             DateTime                @default(now()) @db.DateTime(0)
+  last_updated           DateTime                @default(now()) @db.DateTime(0)
   weight_balance_limits  weight_balance_limits[]
   performance_profiles   performance_profiles    @relation(fields: [performance_profile_id], references: [id], onDelete: Cascade, map: "weight_balance_profiles_ibfk_1")
 
@@ -599,8 +595,8 @@ model fds_at_altitude {
   wind_magnitude_knot Int?
   temperature_c       Int?
   fd_forecasts_id     Int
-  created_at          DateTime     @db.DateTime(0)
-  last_updated        DateTime     @db.DateTime(0)
+  created_at          DateTime     @default(now()) @db.DateTime(0)
+  last_updated        DateTime     @default(now()) @db.DateTime(0)
   fd_forecasts        fd_forecasts @relation(fields: [fd_forecasts_id], references: [id], onDelete: Cascade, map: "fds_at_altitude_ibfk_1")
 
   @@index([fd_forecasts_id], map: "fd_forecasts_id")

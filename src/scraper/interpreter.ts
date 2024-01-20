@@ -83,7 +83,7 @@ class Interpreter {
                         dateTo: endDate,
                         type,
                         groups: []
-                    })   
+                    })  
                 }
                 if (i > 0) changeGroups[i - 1].dateTo = changeGroups[i].dateFrom
             }
@@ -116,7 +116,7 @@ class Interpreter {
                     strIndex = subMatch.index + subMatch[1].length
                 }
                 const wind = Interpreter._extractWindFromTAF(
-                    groupData.slice(strIndex, -1).trim()
+                    groupData.slice(strIndex, groupData.length).trim()
                 )              
                 if (wind) changeGroups[i - 1].groups[j].wind = wind
                 else changeGroups[i - 1].groups.splice(j, 1)
