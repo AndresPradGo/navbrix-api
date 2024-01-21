@@ -9,6 +9,12 @@ import Cleaner from '../scraper/cleaner'
 import validateRequest from '../middleware/validateRequest';
 import auth from '../middleware/auth'
 import {getUserFlight, getOfficialAerodromes} from '../services/shared.services'
+import {
+    updateAerodromeWeather, 
+    updateEnrouteWeather, 
+    getAerodromeWeatherUpdatedDates, 
+    getEnrouteWeatherUpdatedDates
+} from '../services/report.services'
 import { reportRequestSchema, reportResposeBodySchema } from '../schemas/report.schema'
 import isUtcDateFuture from '../utils/isUtcDateFuture';
 import type { ReportRequestParams, ReportRequestInput, ReportResponseBody } from '../schemas/report.schema'
