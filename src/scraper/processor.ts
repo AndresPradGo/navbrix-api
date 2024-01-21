@@ -133,7 +133,7 @@ class Processor {
       request.takeoffWeather.metar.forEach(item => aerodromesList.add(item.aerodromeCode))
     }
     if (request.enrouteWeather) {
-      reports.add('TAF')
+      reports.add('METAR')
       reports.add('Upper Wind')
       request.enrouteWeather.forEach(leg => {
         leg.metar.forEach(item => aerodromesList.add(item.aerodromeCode))
