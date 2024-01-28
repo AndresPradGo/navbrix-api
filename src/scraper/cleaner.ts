@@ -173,7 +173,6 @@ class Cleaner {
 
             order += 1
         }
-
         return upperwinds
     }
 

@@ -1,4 +1,7 @@
 import { z } from "zod";
+import type { BaseAerodromeBriefingResult } from '../scraper/processor'
+import type { GFAGraph, GFARegion } from '../scraper/scraper'
+import type { PIREPType } from '../scraper/interpreter'
 
 // Post Briefing request schemas
 const aerodromeRequestSchema = z.object({
@@ -40,7 +43,7 @@ const departureArrivalAerodromeSchema = z.object({
         .max(12, { message: "Must be at most 12 characters long" })
         .regex(/^[-A-Za-z0-9']+$/, {
             message: "Only letters, numbers and symbols -'",
-        }),
+        }).optional(),
 })
 
 const briefingParamsSquema = z.object({
@@ -66,3 +69,38 @@ export const briefingRequestSchema = z.object({
 // Types
 export type BriefingRequestParams = z.infer<typeof briefingParamsSquema>
 export type BriefingRequestInput = z.infer<typeof briefingRequestBodySchema>;
+
+interface BaseEnrouteBriefingResult {
+    dateFrom: Date;
+    dateTo?: Date
+    data: string;
+}
+
+export type WeatherBriefing = {
+    dateTime: Date;
+    regions:{
+        region: GFARegion;
+        weatherGraphs: GFAGraph[];
+        iceGraphs: GFAGraph[];
+        airmets: BaseEnrouteBriefingResult[];
+        sigmets: BaseEnrouteBriefingResult[];
+        pireps: PIREPType[]
+      }[],
+    aerodromes: {
+        departure: {
+            dateTimeAt: Date
+            aerodrome?: BaseAerodromeBriefingResult
+          }
+          legs: {
+            dateTimeAt: Date;
+            aerodromes: BaseAerodromeBriefingResult[]
+          }[]
+          arrival: {
+            dateTimeAt: Date
+            aerodrome?: BaseAerodromeBriefingResult
+          }
+          alternates: BaseAerodromeBriefingResult[]
+    }
+}
+
+export type NTAMsBriefing = {}

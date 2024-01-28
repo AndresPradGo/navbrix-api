@@ -1,4 +1,5 @@
 import extractWxReportDateTime from '../utils/extractWxReportDateTime';
+import type {BaseEnrouteBriefingResult} from './processor'
 
 interface Wind {
     knots: number
@@ -41,6 +42,23 @@ export interface UpperwindPerAltitude {
             degreesTrue: number;
         };
     }
+}
+
+export interface PIREPType {
+    dateFrom: Date;
+    dateTo?: Date
+    data: string;
+    geometryWarning?: boolean;
+    isUrgent?: boolean;
+    location?: string;
+    ftASL?: number;
+    aircraft?: string;
+    clouds?: string;
+    temperature?: number;
+    wind?: string;
+    turbulence?: string;
+    icing?: string;
+    remarks?: string;
 }
 
 // Interpreter has functions to extract the relevant data from the scraped and processed weather-reports
@@ -158,13 +176,13 @@ class Interpreter {
     }
 
     static readUpperWinds(data: string): UpperwindPerAltitude[] | undefined {
-        const regex = /^[A-Z0-9 ]+\n[A-Z ]+\n[A-Z0-9 ]+\n[A-Z0-9 ]+\n[A-Z0-9 -]+\n[3690 ]+\n([A-Za-z0-9 -]+)\n[1280 ]+\n([A-Za-z0-9 -]+)$/g
+        const regex = /^[A-Z0-9 ]+\n[A-Z ]+\n[A-Z0-9 ]+\n[A-Z0-9 ]+\n[A-Z0-9 -]+\n[3690 ]+\n([A-Za-z0-9 +-]+)\n[1280 ]+\n([A-Za-z0-9 +-]+)$/g
         const match = regex.exec(data)
         if(match) {
             const upperwindArray:UpperwindPerAltitude[]  = [
                 {altitude: 3000}, {altitude: 6000}, {altitude: 9000}, {altitude: 12000}, {altitude: 18000}
             ]
-            const row1Regex = /^([0-3]\d{2}\s{1,3}\d{1,3}|Calm|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)$/g
+            const row1Regex = /^([0-3]\d{2}\s{1,3}\d{1,3}|Calm|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}([+-]?\d{1,2}))|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}([+-]?\d{1,2}))|No Forecast)$/g
             const row1Match = row1Regex.exec(match[1].trim())
             if(row1Match){
                const rowMatchResults = [
@@ -196,7 +214,7 @@ class Interpreter {
                     }
                 })
             }
-            const row2Regex = /^((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}(-?\d{1,2}))|No Forecast)$/g
+            const row2Regex = /^((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}([+-]?\d{1,2}))|No Forecast)\s+((([0-3]\d{2}\s{1,3}\d{1,3}|Calm)\s{1,3}([+-]?\d{1,2}))|No Forecast)$/g
             const row2Match = row2Regex.exec(match[2].trim())
             if(row2Match){
                 const rowMatchResults = [
@@ -232,6 +250,40 @@ class Interpreter {
 
 
     }
+
+    static filterCanadianAIRMETs(airmets: BaseEnrouteBriefingResult[]): BaseEnrouteBriefingResult[] {
+        const regex = /WACN\d{2}/
+        return airmets.filter(airmet => regex.test(airmet.data))
+    }
+
+    static readPIREPs(pireps: BaseEnrouteBriefingResult[]): PIREPType[] {
+        return pireps.map(pirep => {
+            const isUrgent = [/(UACN01)/, /UUA/].reduce((result, regex) => (
+                result && regex.test(pirep.data)
+            ), true)
+            
+            const result:PIREPType = {...pirep, isUrgent}
+            const regex = /\/(OV|FL|TP|SK|TA|WV|TB|IC|RM)([A-Z0-9\s−]+)/g
+            let match: RegExpExecArray | null;
+            while ((match = regex.exec(pirep.data)) !== null) {
+                if (match[1].trim() === "OV") result.location = match[2].trim()
+                if (match[1].trim() === "FL") 
+                    result.ftASL = !isNaN(parseInt(match[2].trim())) ? parseInt(match[2].trim()) * 100 : undefined
+                if (match[1].trim() === "TP") result.aircraft = match[2].trim()
+                if (match[1].trim() === "SK") result.clouds = match[2].trim()
+                if (match[1].trim() === "TA") 
+                    result.temperature = !isNaN(parseInt(match[2].trim())) ? parseInt(match[2].trim()) : undefined
+                if (match[1].trim() === "WV") result.wind = match[2].trim()
+                if (match[1].trim() === "TB") result.turbulence = match[2].trim()
+                if (match[1].trim() === "IC") result.icing = match[2].trim()
+                if (match[1].trim() === "RM") result.remarks = match[2].trim()
+            }
+
+            return result
+        })
+    }
+
+
 
     private static _extractWindFromTAF(data: string): Wind | undefined {
         const windRegex = /([0-3]\d0|VRB)(\d{2})G?(\d{2})?KT/g

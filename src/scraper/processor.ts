@@ -21,7 +21,7 @@ interface BaseReportResult {
   flightWithinForecast: boolean;
 }
 
-interface BaseAerodromeBriefingResult {
+export interface BaseAerodromeBriefingResult {
   aerodromeCode: string;
   nauticalMilesFromTarget: number;
   taf?: {
@@ -36,7 +36,7 @@ interface BaseAerodromeBriefingResult {
   }[]
 }
 
-interface BaseEnrouteBriefingResult {
+export interface BaseEnrouteBriefingResult {
   aerodromes: {
     code: string;
     nauticalMilesFromTarget: number;
@@ -73,7 +73,7 @@ interface AerodromeBriefingPostProcessData {
   dateTime: Date;
   departure: {
     dateTimeAt: Date
-    aerodrome: BaseAerodromeBriefingResult
+    aerodrome?: BaseAerodromeBriefingResult
   }
   legs: {
     dateTimeAt: Date;
@@ -81,15 +81,13 @@ interface AerodromeBriefingPostProcessData {
   }[]
   arrival: {
     dateTimeAt: Date
-    aerodrome: BaseAerodromeBriefingResult
+    aerodrome?: BaseAerodromeBriefingResult
   }
   alternates: BaseAerodromeBriefingResult[]
 }
 
 interface BaseEnrouteBriefingPostProcessData {
   region: GFARegion;
-  dateFrom: Date;
-  dateTo: Date;
   weatherGraphs: GFAGraph[];
   iceGraphs: GFAGraph[];
   airmets: BaseEnrouteBriefingResult[];
@@ -155,8 +153,10 @@ class Processor {
 
   static preprocessBriefingInput (request: BriefingRequestInput): string {
     const aerodromesList = new Set<string>()
-    aerodromesList.add(request.departure.aerodrome)
-    aerodromesList.add(request.arrival.aerodrome)
+    if (request.departure.aerodrome) 
+      aerodromesList.add(request.departure.aerodrome)
+    if (request.arrival.aerodrome) 
+      aerodromesList.add(request.arrival.aerodrome)
     request.legs.forEach(item => {
         item.aerodromes.forEach(a => aerodromesList.add(a.code));
     });
@@ -227,14 +227,12 @@ class Processor {
     const TAFs = scrapedData.reports.filter(item => item.type === 'TAF')
     const METARs = scrapedData.reports.filter(item => item.type === 'METAR')
 
-    
-
     const departureTaf = Processor._findReportByDate(
-      TAFs.filter(taf => !!taf.aerodromes.find(a => a.includes(request.departure.aerodrome))),
+      TAFs.filter(taf => !!taf.aerodromes.find(a => a.includes(request.departure.aerodrome || ""))),
       utcDateTime(request.departure.dateTime)
     )
     const arrivalTaf = Processor._findReportByDate(
-      TAFs.filter(taf => !!taf.aerodromes.find(a => a.includes(request.arrival.aerodrome))),
+      TAFs.filter(taf => !!taf.aerodromes.find(a => a.includes(request.arrival.aerodrome || ""))),
       utcDateTime(request.arrival.dateTime)
     )
     
@@ -242,7 +240,7 @@ class Processor {
       dateTime: scrapedData.date,
       departure: {
         dateTimeAt: utcDateTime(request.departure?.dateTime) || new Date(),
-        aerodrome: {
+        aerodrome: request.departure.aerodrome ? {
           aerodromeCode: request.departure.aerodrome,
           nauticalMilesFromTarget: 0,
           taf: departureTaf ? {
@@ -252,11 +250,11 @@ class Processor {
             flightWithinForecast: departureTaf.within,
           } : undefined,
           metar: METARs.filter(
-            metar => metar.aerodromes.find(a => a.includes(request.departure.aerodrome))
+            metar => metar.aerodromes.find(a => a.includes(request.departure.aerodrome as string))
           ).map(metar => ({data: metar.data, date: metar.dateFrom || new Date()})).sort(
             (a, b) => (b.date && a.date ? b.date.getTime() - a.date.getTime() : 0)
           )
-        }
+        } : undefined
       },
       legs: request.legs.map(leg => ({
         dateTimeAt: utcDateTime(leg.dateTime) || new Date(),
@@ -284,7 +282,7 @@ class Processor {
       })),
       arrival: {
         dateTimeAt: utcDateTime(request.arrival?.dateTime) || new Date(),
-        aerodrome: {
+        aerodrome: request.arrival.aerodrome ? {
           aerodromeCode: request.arrival.aerodrome,
           nauticalMilesFromTarget: 0,
           taf: arrivalTaf ? {
@@ -294,11 +292,11 @@ class Processor {
             flightWithinForecast: arrivalTaf.within,
           } : undefined,
           metar: METARs.filter(
-            metar => metar.aerodromes.find(a => a.includes(request.arrival.aerodrome))
+            metar => metar.aerodromes.find(a => a.includes(request.arrival.aerodrome as string))
           ).map(metar => ({data: metar.data, date: metar.dateFrom || new Date()})).sort(
             (a, b) => (b.date && a.date ? b.date.getTime() - a.date.getTime() : 0)
           )
-        }
+        } : undefined
       },
       alternates: request.alternates.aerodromes.map(aerodrome => {
         const aerodromeTaf = Processor._findReportByDate(
@@ -456,13 +454,6 @@ class Processor {
       const aerodromesInGFA = aerodromesData.filter(
         a => aerodromes.find(code => code === a.code)
       ) 
-      
-      const dateFrom = aerodromesInGFA.length > 0 
-        ? aerodromesInGFA[0].dateTimeAt || utcDateTime(request.departure.dateTime) || new Date()
-        : utcDateTime(request.departure.dateTime) || new Date()
-      const dateTo = aerodromesInGFA.length > 1 
-        ? aerodromesInGFA[aerodromesInGFA.length - 1].dateTimeAt || utcDateTime(request.arrival.dateTime) || new Date()
-        : utcDateTime(request.arrival.dateTime) || new Date()
 
       postprocessedData.push({
         region,
@@ -470,9 +461,7 @@ class Processor {
         iceGraphs,
         airmets,
         sigmets,
-        pireps,
-        dateFrom,
-        dateTo,
+        pireps
       })
     }
 
@@ -497,8 +486,8 @@ class Processor {
 
       const aerodromes = notam.aerodromes.map(code => {
 
-        const dateTimeAt = (code.includes(request.departure.aerodrome) ? utcDateTime(request.departure.dateTime) 
-          : code.includes(request.arrival.aerodrome) ? utcDateTime(request.arrival.dateTime) 
+        const dateTimeAt = (code.includes(request.departure.aerodrome || "") ? utcDateTime(request.departure.dateTime) 
+          : code.includes(request.arrival.aerodrome || "") ? utcDateTime(request.arrival.dateTime) 
           : !!request.alternates.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.alternates.dateTime)
           : utcDateTime(request.legs.find(leg => !!leg.aerodromes.find(a => code.includes(a.code)))?.dateTime)) || new Date()
         
@@ -525,8 +514,8 @@ class Processor {
 
       const aerodromes = notam.aerodromes.map(code => {
 
-        const dateTimeAt = (code.includes(request.departure.aerodrome) ? utcDateTime(request.departure.dateTime) 
-          : code.includes(request.arrival.aerodrome) ? utcDateTime(request.arrival.dateTime) 
+        const dateTimeAt = (code.includes(request.departure.aerodrome || "") ? utcDateTime(request.departure.dateTime) 
+          : code.includes(request.arrival.aerodrome || "") ? utcDateTime(request.arrival.dateTime) 
           : !!request.alternates.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.alternates.dateTime)
           : utcDateTime(request.legs.find(leg => !!leg.aerodromes.find(a => code.includes(a.code)))?.dateTime)) || new Date()
         

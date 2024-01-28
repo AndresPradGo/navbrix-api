@@ -204,8 +204,9 @@ interface EnrouteWeatherData extends BasicWeatherData {
     metars: METARData[]
 }
 export const updateEnrouteWeather = async (flightId: number, sequence: number, data: EnrouteWeatherData): Promise<DatabaseWeatherData> => {
-    await db.legs.updateMany({
-        where: {flight_id: flightId, sequence: sequence},
+    const leg = await db.legs.findFirst({where: {flight_id: flightId, sequence: sequence}})
+    await db.legs.update({
+        where: {id: leg?.id},
         data: {
             temperature_c: data.temperature,
             wind_direction: data.windDirection,
@@ -216,7 +217,7 @@ export const updateEnrouteWeather = async (flightId: number, sequence: number, d
     })
 
      // Update official aerodrome weather data
-     const weather = await findLegWeather(flightId)
+     const weather = await findLegWeather(leg?.id || flightId)
      let weatherId: number
      if (weather !== null) {
         // Update if it already exists
@@ -232,7 +233,7 @@ export const updateEnrouteWeather = async (flightId: number, sequence: number, d
     }  else {
         // Create if it doesn't exist
         const weather = await db.enroute_weather_reports.create({data: {
-            id: flightId, 
+            id: leg?.id || flightId, 
             date:data.date,
             created_at: new Date((new Date()).toISOString()),
             last_updated: new Date((new Date()).toISOString())
@@ -273,17 +274,17 @@ export const updateEnrouteWeather = async (flightId: number, sequence: number, d
                 date: metarData.date,
                 altimeter_inhg: metarData.altimeter,
                 aerodrome_id: aerodrome.id,
-                aerodrome_weather_id: weatherId,
+                enroute_weather_id: weatherId,
                 created_at: new Date((new Date()).toISOString()),
                 last_updated: new Date((new Date()).toISOString())
             }
         })
     }
     // Return
-    const leg = (await db.legs.findMany({where:{flight_id: flightId, sequence: sequence}}))[0]
+    const updatedLeg = (await db.legs.findMany({where:{flight_id: flightId, sequence: sequence}}))[0]
     return {
-        ...leg, 
-        wind_direction: leg.wind_direction ? leg.wind_direction : undefined,
-        altimeter_inhg: Number(leg?.altimeter_inhg)
+        ...updatedLeg, 
+        wind_direction: updatedLeg?.wind_direction ? updatedLeg.wind_direction : undefined,
+        altimeter_inhg: Number(updatedLeg?.altimeter_inhg)
     }
 }
