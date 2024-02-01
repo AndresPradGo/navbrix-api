@@ -63,8 +63,11 @@ router.post(
                 return res.status(400).json('All aerodrome codes need to be valid codes.')
 
         
-        // Scrape
-        const aerodromeCodes = Processor.preprocessBriefingInput(req.body)
+        // Preprocess input and check that total number of aerodromes is within 48
+        const {aerodromes: aerodromeCodes, numAerodromes} = Processor.preprocessBriefingInput(req.body)
+        if (numAerodromes > 48)
+            return res.status(400).json(`This request includes ${numAerodromes} aerodromes. A maximum number of 48 aerodromes is accepted per request.`)
+         // Scrape
         const scraper = new Scraper(3)
         await scraper.init()
         const reports = await scraper.getAerodromeReports({
@@ -111,8 +114,12 @@ router.post(
         if (!(await aerodromesAreValid(req)))
                 return res.status(400).json('All aerodrome codes need to be valid codes.')
         
+        // Preprocess input and check that total number of aerodromes is within 48
+        const {aerodromes: aerodromeCodes, numAerodromes} = Processor.preprocessBriefingInput(req.body)
+        if (numAerodromes > 48)
+            return res.status(400).json(`This request includes ${numAerodromes} aerodromes. A maximum number of 48 aerodromes is accepted per request.`)
+        
         // Scrape
-        const aerodromeCodes = Processor.preprocessBriefingInput(req.body)
         const scraper = new Scraper()
         await scraper.init()
         const notams = await scraper.getNOTAMs(aerodromeCodes)

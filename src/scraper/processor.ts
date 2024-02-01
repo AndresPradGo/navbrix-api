@@ -12,6 +12,10 @@ import type {
 } from './scraper'
 import utcDateTime from '../utils/utcDateTime';
 
+interface PreProcessedReportRequest extends ReportsRequestType{
+  numAerodromes: number
+}
+
 interface BaseReportResult {
   aerodromeCode: string;
   nauticalMilesFromTarget: number
@@ -120,7 +124,7 @@ interface NOTAMsPostProcessData {
 // Processor class has static methods to proces input and output data from the scraper
 class Processor {
 
-  static preprocessReportsInput (request: ReportRequestInput): ReportsRequestType {
+  static preprocessReportsInput (request: ReportRequestInput): PreProcessedReportRequest {
     const aerodromesList = new Set<string>()
     const reports = new Set<ReportType>()
   
@@ -144,14 +148,16 @@ class Processor {
       request.landingWeather.taf.forEach(item => aerodromesList.add(item.aerodromeCode))
       request.landingWeather.metar.forEach(item => aerodromesList.add(item.aerodromeCode))
     }
-  
+
+
+
     const aerodromeCodes = Array.from(aerodromesList).join(" ")
   
-    return {aerodromeCodes, reports}
+    return {aerodromeCodes, reports, numAerodromes: aerodromesList.size}
   
     }
 
-  static preprocessBriefingInput (request: BriefingRequestInput): string {
+  static preprocessBriefingInput (request: BriefingRequestInput): {aerodromes: string, numAerodromes: number} {
     const aerodromesList = new Set<string>()
     if (request.departure.aerodrome) 
       aerodromesList.add(request.departure.aerodrome)
@@ -162,7 +168,7 @@ class Processor {
     });
     request.alternates.aerodromes.forEach(a => aerodromesList.add(a.code));
 
-    return Array.from(aerodromesList).join(" ")
+    return {aerodromes: Array.from(aerodromesList).join(" "), numAerodromes: aerodromesList.size}
   }
 
   static postprocessScrapedRreport (

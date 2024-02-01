@@ -77,7 +77,7 @@ class Scraper {
     }
 
     async init() {
-        this._browser = await puppeteer.launch({headless: 'new', handleSIGINT: false})
+        this._browser = await puppeteer.launch({headless: false, handleSIGINT: false})
         this._page = await this._browser.newPage()
         await this._page.setViewport({
             width: 1900,
@@ -352,8 +352,8 @@ class Scraper {
 
 
     private async  _setAerodromeSearch(request: ReportsRequestType) {
-        await this._addAerodrome(request.aerodromeCodes)
         await this._addReports(request.reports)
+        await this._addAerodrome(request.aerodromeCodes)
     }
 
     private async _setGFASearch(aerodromes: string) {

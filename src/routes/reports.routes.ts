@@ -67,6 +67,9 @@ router.post(
 
         // Scrape
         const scraperInput = Processor.preprocessReportsInput(req.body)
+        if (scraperInput.numAerodromes > 48)
+            return res.status(400).json(`This request includes ${scraperInput.numAerodromes} aerodromes. A maximum number of 48 aerodromes is accepted per request.`)
+        
         const scraper = new Scraper()
         await scraper.init()
         const scrapedData = await scraper.getAerodromeReports(scraperInput)
