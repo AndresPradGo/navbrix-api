@@ -32,10 +32,10 @@ model aerodromes {
   id               Int              @id @default(autoincrement())
   vfr_waypoint_id  Int?             @unique(map: "vfr_waypoint_id")
   user_waypoint_id Int?             @unique(map: "user_waypoint_id")
-  has_taf          Boolean
-  has_metar        Boolean
-  has_fds          Boolean
-  elevation_ft     Int
+  has_taf          Boolean          @default(false)
+  has_metar        Boolean          @default(false)
+  has_fds          Boolean          @default(false)
+  elevation_ft     Int              @default(0)
   status_id        Int
   created_at       DateTime         @db.DateTime(0)
   last_updated     DateTime         @db.DateTime(0)
@@ -70,10 +70,10 @@ model aircraft {
 
 model arrivals {
   flight_id                 Int                        @id @unique(map: "flight_id")
-  temperature_c             Int
+  temperature_c             Int                        @default(15)
   wind_direction            Int?
-  wind_magnitude_knot       Int
-  altimeter_inhg            Decimal                    @db.Decimal(4, 2)
+  wind_magnitude_knot       Int                        @default(0)
+  altimeter_inhg            Decimal                    @default(29.92) @db.Decimal(4, 2)
   temperature_last_updated  DateTime?                  @db.DateTime(0)
   wind_last_updated         DateTime?                  @db.DateTime(0)
   altimeter_last_updated    DateTime?                  @db.DateTime(0)
@@ -104,7 +104,7 @@ model baggage_compartments {
 model baggages {
   id                     Int                  @id @default(autoincrement())
   name                   String               @db.VarChar(255)
-  weight_lb              Decimal              @db.Decimal(5, 2)
+  weight_lb              Decimal              @default(5.0) @db.Decimal(5, 2)
   flight_id              Int
   baggage_compartment_id Int
   created_at             DateTime             @db.DateTime(0)
@@ -153,10 +153,10 @@ model cruise_performance_data {
 
 model departures {
   flight_id                 Int                        @id @unique(map: "flight_id")
-  temperature_c             Int
+  temperature_c             Int                        @default(15)
   wind_direction            Int?
-  wind_magnitude_knot       Int
-  altimeter_inhg            Decimal                    @db.Decimal(4, 2)
+  wind_magnitude_knot       Int                        @default(0)
+  altimeter_inhg            Decimal                    @default(29.92) @db.Decimal(4, 2)
   temperature_last_updated  DateTime?                  @db.DateTime(0)
   wind_last_updated         DateTime?                  @db.DateTime(0)
   altimeter_last_updated    DateTime?                  @db.DateTime(0)
@@ -200,8 +200,8 @@ model flight_waypoints {
   waypoint_id        Int       @id @unique(map: "waypoint_id")
   code               String    @db.VarChar(12)
   name               String    @db.VarChar(50)
-  from_user_waypoint Boolean
-  from_vfr_waypoint  Boolean
+  from_user_waypoint Boolean   @default(false)
+  from_vfr_waypoint  Boolean   @default(false)
   leg_id             Int
   created_at         DateTime  @db.DateTime(0)
   last_updated       DateTime  @db.DateTime(0)
@@ -214,12 +214,12 @@ model flight_waypoints {
 model flights {
   id                       Int                @id @default(autoincrement())
   departure_time           DateTime           @db.DateTime(0)
-  bhp_percent              Int
-  added_enroute_time_hours Decimal            @db.Decimal(4, 2)
-  reserve_fuel_hours       Decimal            @db.Decimal(4, 2)
-  contingency_fuel_hours   Decimal            @db.Decimal(4, 2)
-  briefing_radius_nm       Int
-  alternate_radius_nm      Int
+  bhp_percent              Int                @default(65)
+  added_enroute_time_hours Decimal            @default(0.0) @db.Decimal(4, 2)
+  reserve_fuel_hours       Decimal            @default(0.5) @db.Decimal(4, 2)
+  contingency_fuel_hours   Decimal            @default(0.0) @db.Decimal(4, 2)
+  briefing_radius_nm       Int                @default(10)
+  alternate_radius_nm      Int                @default(25)
   aircraft_id              Int?
   pilot_id                 Int
   created_at               DateTime           @db.DateTime(0)
@@ -239,7 +239,7 @@ model flights {
 
 model fuel {
   id           Int        @id @default(autoincrement())
-  gallons      Decimal    @db.Decimal(5, 2)
+  gallons      Decimal    @default(0.0) @db.Decimal(5, 2)
   flight_id    Int
   fuel_tank_id Int
   created_at   DateTime   @db.DateTime(0)
@@ -256,8 +256,8 @@ model fuel_tanks {
   name                   String               @db.VarChar(50)
   arm_in                 Decimal              @db.Decimal(6, 2)
   fuel_capacity_gallons  Decimal              @db.Decimal(5, 2)
-  unusable_fuel_gallons  Decimal              @db.Decimal(5, 2)
-  burn_sequence          Int
+  unusable_fuel_gallons  Decimal              @default(0.0) @db.Decimal(5, 2)
+  burn_sequence          Int                  @default(1)
   performance_profile_id Int
   created_at             DateTime             @db.DateTime(0)
   last_updated           DateTime             @db.DateTime(0)
@@ -294,11 +294,11 @@ model landing_performance_data {
 model legs {
   id                       Int                      @id @default(autoincrement())
   sequence                 Int
-  altitude_ft              Int
-  temperature_c            Int
+  altitude_ft              Int                      @default(2000)
+  temperature_c            Int                      @default(13)
   wind_direction           Int?
-  wind_magnitude_knot      Int
-  altimeter_inhg           Decimal                  @db.Decimal(4, 2)
+  wind_magnitude_knot      Int                      @default(0)
+  altimeter_inhg           Decimal                  @default(29.92) @db.Decimal(4, 2)
   temperature_last_updated DateTime?                @db.DateTime(0)
   wind_last_updated        DateTime?                @db.DateTime(0)
   altimeter_last_updated   DateTime?                @db.DateTime(0)
@@ -334,7 +334,7 @@ model metar_reports {
 model passenger_profiles {
   id               Int                @id @default(autoincrement())
   name             String             @db.VarChar(255)
-  weight_lb        Decimal            @db.Decimal(5, 2)
+  weight_lb        Decimal            @default(200.0) @db.Decimal(5, 2)
   creator_id       Int
   created_at       DateTime           @db.DateTime(0)
   last_updated     DateTime           @db.DateTime(0)
@@ -347,20 +347,20 @@ model passenger_profiles {
 model performance_profiles {
   id                                     Int                             @id @default(autoincrement())
   name                                   String                          @db.VarChar(255)
-  is_complete                            Boolean
+  is_complete                            Boolean                         @default(false)
   center_of_gravity_in                   Decimal?                        @db.Decimal(6, 2)
-  empty_weight_lb                        Decimal                         @db.Decimal(7, 2)
-  max_ramp_weight_lb                     Decimal                         @db.Decimal(7, 2)
-  max_takeoff_weight_lb                  Decimal                         @db.Decimal(7, 2)
-  max_landing_weight_lb                  Decimal                         @db.Decimal(7, 2)
-  baggage_allowance_lb                   Decimal                         @db.Decimal(6, 2)
-  take_off_taxi_fuel_gallons             Decimal                         @db.Decimal(4, 2)
-  percent_decrease_takeoff_headwind_knot Decimal                         @db.Decimal(4, 2)
-  percent_increase_takeoff_tailwind_knot Decimal                         @db.Decimal(4, 2)
-  percent_decrease_landing_headwind_knot Decimal                         @db.Decimal(4, 2)
-  percent_increase_landing_tailwind_knot Decimal                         @db.Decimal(4, 2)
-  percent_increase_climb_temperature_c   Decimal                         @db.Decimal(4, 2)
-  is_preferred                           Boolean
+  empty_weight_lb                        Decimal                         @default(0.0) @db.Decimal(7, 2)
+  max_ramp_weight_lb                     Decimal                         @default(0.0) @db.Decimal(7, 2)
+  max_takeoff_weight_lb                  Decimal                         @default(0.0) @db.Decimal(7, 2)
+  max_landing_weight_lb                  Decimal                         @default(0.0) @db.Decimal(7, 2)
+  baggage_allowance_lb                   Decimal                         @default(0.0) @db.Decimal(6, 2)
+  take_off_taxi_fuel_gallons             Decimal                         @default(0.0) @db.Decimal(4, 2)
+  percent_decrease_takeoff_headwind_knot Decimal                         @default(0.0) @db.Decimal(4, 2)
+  percent_increase_takeoff_tailwind_knot Decimal                         @default(0.0) @db.Decimal(4, 2)
+  percent_decrease_landing_headwind_knot Decimal                         @default(0.0) @db.Decimal(4, 2)
+  percent_increase_landing_tailwind_knot Decimal                         @default(0.0) @db.Decimal(4, 2)
+  percent_increase_climb_temperature_c   Decimal                         @default(0.0) @db.Decimal(4, 2)
+  is_preferred                           Boolean                         @default(false)
   fuel_type_id                           Int?
   aircraft_id                            Int?
   created_at                             DateTime                        @db.DateTime(0)
@@ -447,8 +447,8 @@ model seat_rows {
 
 model surfaces_performance_decrease {
   id                     Int                  @id @default(autoincrement())
-  percent                Decimal              @db.Decimal(4, 2)
-  is_takeoff             Boolean
+  percent                Decimal              @default(0) @db.Decimal(4, 2)
+  is_takeoff             Boolean              @default(true)
   surface_id             Int
   performance_profile_id Int
   created_at             DateTime             @db.DateTime(0)
@@ -467,7 +467,7 @@ model taf_forecasts {
   date_to                   DateTime                  @db.DateTime(0)
   wind_direction            Int?
   wind_direction_range      Int?
-  wind_magnitude_knot       Int
+  wind_magnitude_knot       Int                       @default(0)
   gust_factor_knot          Int?
   aerodrome_weather_id      Int
   aerodrome_id              Int
@@ -513,12 +513,12 @@ model users {
   id                 Int                  @id @default(autoincrement())
   email              String               @unique(map: "email") @db.VarChar(255)
   name               String               @db.VarChar(255)
-  weight_lb          Decimal              @db.Decimal(5, 2)
+  weight_lb          Decimal              @default(200.0) @db.Decimal(5, 2)
   password           String               @db.VarChar(255)
-  is_active          Boolean
-  is_admin           Boolean
-  is_master          Boolean
-  is_trial           Boolean
+  is_active          Boolean              @default(true)
+  is_admin           Boolean              @default(false)
+  is_master          Boolean              @default(false)
+  is_trial           Boolean              @default(false)
   created_at         DateTime             @db.DateTime(0)
   last_updated       DateTime             @db.DateTime(0)
   aircraft           aircraft[]
@@ -533,7 +533,7 @@ model vfr_waypoints {
   waypoint_id  Int         @id @unique(map: "waypoint_id")
   code         String      @unique(map: "code") @db.VarChar(12)
   name         String      @db.VarChar(255)
-  hidden       Boolean
+  hidden       Boolean     @default(true)
   creator_id   Int
   created_at   DateTime    @db.DateTime(0)
   last_updated DateTime    @db.DateTime(0)
@@ -547,13 +547,13 @@ model vfr_waypoints {
 model waypoints {
   id                 Int               @id @default(autoincrement())
   lat_degrees        Int
-  lat_minutes        Int
-  lat_seconds        Int
-  lat_direction      String            @db.VarChar(1)
+  lat_minutes        Int               @default(0)
+  lat_seconds        Int               @default(0)
+  lat_direction      String            @default("N") @db.VarChar(1)
   lon_degrees        Int
-  lon_minutes        Int
-  lon_seconds        Int
-  lon_direction      String            @db.VarChar(1)
+  lon_minutes        Int               @default(0)
+  lon_seconds        Int               @default(0)
+  lon_direction      String            @default("E") @db.VarChar(1)
   magnetic_variation Decimal?          @db.Decimal(4, 2)
   in_north_airspace  Boolean
   created_at         DateTime          @db.DateTime(0)
@@ -578,7 +578,7 @@ model weight_balance_limits {
 
 model weight_balance_profiles {
   id                     Int                     @id @default(autoincrement())
-  name                   String                  @db.VarChar(50)
+  name                   String                  @default("Normal Category") @db.VarChar(50)
   performance_profile_id Int
   created_at             DateTime                @db.DateTime(0)
   last_updated           DateTime                @db.DateTime(0)
