@@ -1,4 +1,5 @@
 import type {TAFWindSummary, ChangeGroup, UpperwindPerAltitude} from './interpreter'
+import type {AerodromeBriefingPostProcessData} from './processor'
 
 interface AerodromeWindInputData {
     aerodrome: string;
@@ -126,6 +127,17 @@ class Cleaner {
             return 0
         }).map((metar, idx) => ({...metar, order: idx + 1})) as EnrouteMETAR[]
 
+    }
+
+    static briefingAerodromes(data: AerodromeBriefingPostProcessData): AerodromeBriefingPostProcessData {
+        return {
+            ...data,
+            legs: data.legs.map(leg => ({
+                ...leg, 
+                aerodromes: leg.aerodromes.filter(a => a.metar.length > 0 && !!a.taf),
+            })),
+            alternates: data.alternates.filter(a =>  a.metar.length > 0 && !!a.taf)
+        }
     }
 
     static enrouteUpperWinds(data: UpperwindInput[], altitude: number, dateTimeAt: Date): UpperWind[] {

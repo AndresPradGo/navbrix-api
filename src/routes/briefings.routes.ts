@@ -15,6 +15,7 @@ import type {
 import Processor from '../scraper/processor';
 import isUtcDateFuture from '../utils/isUtcDateFuture';
 import Interpreter from '../scraper/interpreter';
+import Cleaner from '../scraper/cleaner';
 
 
 // Reusable function to check aerodrome codes are valid
@@ -84,7 +85,7 @@ router.post(
         // Return response
         return res.status(200).json({
             dateTime: aerodromeBriefings.dateTime,
-            aerodromes: aerodromeBriefings,
+            aerodromes: Cleaner.briefingAerodromes(aerodromeBriefings),
             regions: enrouteBriefings.briefings.map(region => ({
                 ...region,
                 pireps: Interpreter.readPIREPs(region.pireps),

@@ -73,7 +73,7 @@ interface WeatherReportPostProcessData {
   landingWeather?: AerodromeReportPostProcessData
 }
 
-interface AerodromeBriefingPostProcessData {
+export interface AerodromeBriefingPostProcessData {
   dateTime: Date;
   departure: {
     dateTimeAt: Date
