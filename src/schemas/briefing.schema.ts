@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { BaseAerodromeBriefingResult } from '../scraper/processor'
+import type { BaseAerodromeBriefingResult, NOTAMsPostProcessData } from '../scraper/processor'
 import type { GFAGraph, GFARegion } from '../scraper/scraper'
 import type { PIREPType } from '../scraper/interpreter'
 
@@ -103,4 +103,4 @@ export type WeatherBriefing = {
     }
 }
 
-export type NTAMsBriefing = {}
+export type NOTAMsBriefing = NOTAMsPostProcessData

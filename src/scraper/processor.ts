@@ -111,13 +111,13 @@ interface NotamReportReturnType {
     flightWithinNotam: boolean
   }[];
   data: string;
-  dateFrom?: Date;
+  dateFrom: Date;
   dateTo? : Date;
+  isAipSuplement: boolean;
 }
 
-interface NOTAMsPostProcessData {
+export interface NOTAMsPostProcessData {
   dateTime: Date;
-  aipSuplementNotams: NotamReportReturnType[];
   notams: NotamReportReturnType[];
 }
 
@@ -485,13 +485,12 @@ class Processor {
     const etd = utcDateTime(request.departure.dateTime) || new Date()
     const etdMinus2 = new Date(etd.getTime())
     etdMinus2.setHours(etd.getHours() - 2)
+
     const notams = scrapedNotams.reports.filter(notam => (
-      !notam.isSup &&
       !((notam.dateFrom && etaPlus2 < notam.dateFrom) || (notam.dateTo && notam.dateTo < etdMinus2))
     )).map(notam => {
 
       const aerodromes = notam.aerodromes.map(code => {
-
         const dateTimeAt = (code.includes(request.departure.aerodrome || "") ? utcDateTime(request.departure.dateTime) 
           : code.includes(request.arrival.aerodrome || "") ? utcDateTime(request.arrival.dateTime) 
           : !!request.alternates.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.alternates.dateTime)
@@ -511,40 +510,12 @@ class Processor {
         data: notam.data,
         dateFrom: notam.dateFrom,
         dateTo: notam.dateTo,
-      }
-    }).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
-    const aipSuplementNotams = scrapedNotams.reports.filter(notam => (
-      !notam.isSup &&
-      !((notam.dateFrom && etaPlus2 < notam.dateFrom) || (notam.dateTo && notam.dateTo < etdMinus2))
-    )).map(notam => {
-
-      const aerodromes = notam.aerodromes.map(code => {
-
-        const dateTimeAt = (code.includes(request.departure.aerodrome || "") ? utcDateTime(request.departure.dateTime) 
-          : code.includes(request.arrival.aerodrome || "") ? utcDateTime(request.arrival.dateTime) 
-          : !!request.alternates.aerodromes.find(a => code.includes(a.code)) ? utcDateTime(request.alternates.dateTime)
-          : utcDateTime(request.legs.find(leg => !!leg.aerodromes.find(a => code.includes(a.code)))?.dateTime)) || new Date()
-        
-        const flightWithinNotam = !((notam.dateFrom && dateTimeAt < notam.dateFrom) || (notam.dateTo && notam.dateTo < dateTimeAt))
-
-        return {
-          code: code,
-          dateTimeAt,
-          flightWithinNotam
-        }
-      })
-
-      return {
-        aerodromes,
-        data: notam.data,
-        dateFrom: notam.dateFrom,
-        dateTo: notam.dateTo,
+        isAipSuplement: notam.isSup
       }
     }).sort((a, b) => a.aerodromes.length - b.aerodromes.length)
     
     const postProcessedNotams: NOTAMsPostProcessData = {
       dateTime: scrapedNotams.date,
-      aipSuplementNotams,
       notams
     }
 

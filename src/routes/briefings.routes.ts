@@ -10,7 +10,7 @@ import type {
     BriefingRequestInput, 
     BriefingRequestParams, 
     WeatherBriefing, 
-    NTAMsBriefing 
+    NOTAMsBriefing 
 } from '../schemas/briefing.schema'
 import Processor from '../scraper/processor';
 import isUtcDateFuture from '../utils/isUtcDateFuture';
@@ -100,8 +100,8 @@ router.post(
     '/notam/:flightId', 
     [validateRequest(briefingRequestSchema), auth],
     async (
-        req: Request<BriefingRequestParams, NTAMsBriefing | string, BriefingRequestInput>, 
-        res: Response<NTAMsBriefing | string>
+        req: Request<BriefingRequestParams, NOTAMsBriefing | string, BriefingRequestInput>, 
+        res: Response<NOTAMsBriefing | string>
     ) => {
         // Check flight is in the future
         if (
@@ -130,7 +130,7 @@ router.post(
         const processedNotams = Processor.postprocessScrapedNotams(req.body, notams)
 
         // Return response
-        return res.status(200).json({})
+        return res.status(200).json(processedNotams)
     }
 )
 

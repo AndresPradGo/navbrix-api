@@ -33,7 +33,7 @@ export interface WeatherReportReturnType {
 interface NotamReportReturnType {
     aerodromes: string[];
     data: string;
-    dateFrom?: Date;
+    dateFrom: Date;
     dateTo? : Date;
     isSup: boolean;
 }
