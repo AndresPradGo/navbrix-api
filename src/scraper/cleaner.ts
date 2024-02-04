@@ -217,9 +217,13 @@ class Cleaner {
                 const degreesSlope = (upperWind.degreesTrue - lowerWind.degreesTrue) / (upperAltitude - lowerAltitude)
                 const degreesIntercept= lowerWind.degreesTrue - degreesSlope * lowerAltitude
 
+                let degreesTrue = degreesSlope * altitude + degreesIntercept
+                while (degreesTrue > 360) degreesTrue -= 360 
+                while (degreesTrue <= 0) degreesTrue = 360 + degreesTrue
+
                 return {
-                    knots:  knotsSlope * altitude + knotsIntercept,
-                    degreesTrue: degreesSlope * altitude + degreesIntercept
+                    knots:  Math.max(knotsSlope * altitude + knotsIntercept, 0),
+                    degreesTrue
                 }
             }
 
