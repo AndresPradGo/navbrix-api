@@ -1,4 +1,4 @@
 {
-    "jwt_secret_key": "FLIGHT_PLANNER_JWT_SECRET_KEY",
-    "jwt_algorithm": "FLIGHT_PLANNER_JWT_ALGORITHM"
+    "jwt_secret_key": "NAVBRIX_API_JWT_SECRET_KEY",
+    "jwt_algorithm": "NAVBRIX_API_JWT_ALGORITHM"
 }

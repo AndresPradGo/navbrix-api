@@ -31,7 +31,7 @@ router.post(
     ) => {
         // Check if user has permissions to update flight
         const flight = await getUserFlight(parseInt(req.params.flightId), req.query.userEmail as string)
-        if(!flight) return res.status(400).json('You do not have permissions to update this flight.')
+        if(!flight) return res.status(400).json('Valid flightId is required.')
 
         // Check flight is in the future
         if (
@@ -62,7 +62,7 @@ router.post(
             const aerodromesList = [...aerodromesSet]
             const aerodromesInDB = await getOfficialAerodromes(aerodromesList)
             if (aerodromesInDB.length < aerodromesList.length )
-                return res.status(400).json('All aerodrome codes need to be valid codes.')
+                return res.status(400).json('Provide only valid aerodrome codes.')
         }
 
         // Scrape
@@ -317,7 +317,7 @@ router.post(
             responseData = reportResposeBodySchema.parse(responseData)
         } catch (error) {
             if(error instanceof ZodError && error.errors.length > 0) {
-                return res.status(400).json(error.errors[0].message)
+                return res.status(422).json(error.errors[0].message)
             }
             return res.status(500).json("An unexpected server error occured, please try again later.")
         }

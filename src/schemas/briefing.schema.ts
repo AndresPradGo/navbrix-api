@@ -1,4 +1,9 @@
+import path from 'path';
+
 import { z } from "zod";
+import zodToJsonSchema from 'zod-to-json-schema'
+import { createGenerator } from 'ts-json-schema-generator';
+
 import type { BaseAerodromeBriefingResult, NOTAMsPostProcessData } from '../scraper/processor'
 import type { GFAGraph, GFARegion } from '../scraper/scraper'
 import type { PIREPType } from '../scraper/interpreter'
@@ -50,7 +55,7 @@ const briefingParamsSquema = z.object({
     flightId: z
         .string()
         .regex(/^[1-9]\d*$/, {
-            message: "Flight ID must be a round number greather than zero.",
+            message: "Valid flightId is required.",
         }),
 })
 
@@ -59,7 +64,7 @@ const briefingRequestBodySchema = z.object ({
     legs: z.array(briefingRequestBaseSchema),
     arrival: departureArrivalAerodromeSchema,
     alternates: briefingRequestBaseSchema,
-})
+}).describe("Schema that outlines the data required to post a new briefing request.")
 
 export const briefingRequestSchema = z.object({
     body: briefingRequestBodySchema,
@@ -104,3 +109,31 @@ export type WeatherBriefing = {
 }
 
 export type NOTAMsBriefing = NOTAMsPostProcessData
+
+// Swagger documentation schemas
+export const BriefingRequest = zodToJsonSchema(
+    briefingRequestBodySchema, 
+    {definitions: { departureArrivalAerodromeSchema,  briefingRequestBaseSchema}}
+)
+
+const repoRoot = process.cwd();
+
+export const WeatherBriefingResponse = {
+    ...(createGenerator({
+        path: path.join(repoRoot, "src", "schemas", "briefing.schema.ts"),
+        tsconfig: path.join(repoRoot, "tsconfig.json"),
+        type: "WeatherBriefing",
+    }).createSchema("WeatherBriefing")), 
+    type: "object",
+    description: "Schema that outlines the weather briefing data to return to the client."
+}
+
+export const NotamsBriefingResponse = {
+    ...(createGenerator({
+        path: path.join(repoRoot, "src", "schemas", "briefing.schema.ts"),
+        tsconfig: path.join(repoRoot, "tsconfig.json"),
+        type: "NOTAMsBriefing",
+    }).createSchema("NOTAMsBriefing")), 
+    type: "object",
+    decription: "Schema that outlines the NOTAMs briefing data to return to the client."
+}

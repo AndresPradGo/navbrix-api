@@ -49,7 +49,7 @@ router.post(
     ) => {
         // Check if user has permissions to update flight
         const flight = await getUserFlight(parseInt(req.params.flightId), req.query.userEmail as string)
-        if(!flight) return res.status(400).json('You do not have permissions to update this flight.')
+        if(!flight) return res.status(400).json('Valid flightId is required.')
 
         // Check flight is in the future
         if (
@@ -61,7 +61,7 @@ router.post(
 
         // Check all aerodrome codes are valid
         if (!(await aerodromesAreValid(req)))
-                return res.status(400).json('All aerodrome codes need to be valid codes.')
+                return res.status(400).json('Provide only valid aerodrome codes.')
 
         
         // Preprocess input and check that total number of aerodromes is within 48
@@ -113,7 +113,7 @@ router.post(
 
         // Check all aerodrome codes are valid
         if (!(await aerodromesAreValid(req)))
-                return res.status(400).json('All aerodrome codes need to be valid codes.')
+                return res.status(400).json('Provide only valid aerodrome codes.')
         
         // Preprocess input and check that total number of aerodromes is within 48
         const {aerodromes: aerodromeCodes, numAerodromes} = Processor.preprocessBriefingInput(req.body)

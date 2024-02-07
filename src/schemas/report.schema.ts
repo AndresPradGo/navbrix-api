@@ -1,4 +1,5 @@
 import { z } from "zod";
+import zodToJsonSchema from 'zod-to-json-schema'
 
 // Post Report request schemas
 const baseReportRequestSchema = z.object({
@@ -44,13 +45,13 @@ const reportRequestBodySchema = z.object ({
     takeoffWeather: aerodromeReportRequestSchema.optional(),
     enrouteWeather: z.array(enrouteReportRequestSchema).optional(),
     landingWeather:  aerodromeReportRequestSchema.optional(),
-})
+}).describe("Schema that outlines the data required to post a new weather report.");
 
 const reportParamsSquema = z.object({
     flightId: z
         .string()
         .regex(/^[1-9]\d*$/, {
-            message: "Flight ID must be a round number greather than zero.",
+            message: "Valid flightId is required.",
         }),
 })
 
@@ -97,11 +98,21 @@ export const reportResposeBodySchema = z.object ({
     enrouteWeather: z.array(baseReportResponseSchema).optional(),
     landingWeather:  baseReportResponseSchema.optional(),
     allWeatherIsOfficial: z.boolean(),
-    weatherHoursFromETD: z.number().min(-1)
-})
+    weatherHoursFromETD: z.number().min(-1).describe("Equals -1 if ETD is in the past \n\n Greather then 10,000 if some weather data has not been updated ")
+}).describe("Schema that outlines the weather report data to return to the client.");
 
 // Types
 export type BaseReportRequest = z.infer<typeof baseReportRequestSchema>;
 export type ReportRequestParams = z.infer<typeof reportParamsSquema>
 export type ReportRequestInput = z.infer<typeof reportRequestBodySchema>;
 export type ReportResponseBody = z.infer<typeof reportResposeBodySchema>;
+
+// Swagger documentation schemas
+export const ReportRequest = zodToJsonSchema(
+    reportRequestBodySchema, 
+    {definitions: { aerodromeReportRequestSchema }}
+)
+export const ReportResponse = zodToJsonSchema(
+    reportResposeBodySchema, 
+    {definitions: { baseReportResponseSchema }}
+)
