@@ -6,3 +6,5 @@ node_modules/
 
 #prisma
 .env
+# Sentry Config File
+.sentryclirc
