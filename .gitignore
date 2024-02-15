@@ -4,7 +4,11 @@
 #dependencies
 node_modules/
 
-#prisma
-.env
+# Environment variables
+.env*
+
+# Sentry Config File
+.sentryclirc
+
 # Sentry Config File
 .sentryclirc
