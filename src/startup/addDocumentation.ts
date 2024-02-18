@@ -1,7 +1,9 @@
 import type {Express} from 'express'
 import swaggerUi from 'swagger-ui-express';
+import config from 'config'
+
 import { ReportRequest, ReportResponse } from '../schemas/report.schema';
-import { BriefingRequest, WeatherBriefingResponse, NotamsBriefingResponse } from '../schemas/briefing.schema';
+import { BriefingRequest } from '../schemas/briefing.schema';
 
 const addDocumentation = (app: Express, port: number) => {
     
@@ -14,7 +16,7 @@ const addDocumentation = (app: Express, port: number) => {
         },
         externalDocs: {
             description: 'NavCraft API Documentation',
-            url: 'http://localhost:8000/docs'
+            url: config.get('navcraft_api_url')
 
         },
         servers: [ { url: 'http://127.0.0.1:3000' } ],
@@ -155,8 +157,18 @@ const addDocumentation = (app: Express, port: number) => {
                 ReportRequest,
                 ReportResponse,
                 BriefingRequest,
-                WeatherBriefingResponse,
-                NotamsBriefingResponse
+                WeatherBriefingResponse: {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "$ref": "#/definitions/WeatherBriefing",
+                    "type": "object",
+                    "description": "Schema that outlines the weather briefing data to return to the client."
+                },
+                NotamsBriefingResponse: {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "$ref": "#/definitions/NOTAMsBriefing",
+                    "type": "object",
+                    "decription": "Schema that outlines the NOTAMs briefing data to return to the client."
+                  }
             },
             securitySchemes: {
                 "x-auth-token": {
@@ -174,8 +186,404 @@ const addDocumentation = (app: Express, port: number) => {
             baseReportResponseSchema: ReportResponse.definitions?.baseReportResponseSchema,
             departureArrivalAerodromeSchema: BriefingRequest.definitions?.departureArrivalAerodromeSchema,
             briefingRequestBaseSchema: BriefingRequest.definitions?.briefingRequestBaseSchema,
-            ...WeatherBriefingResponse.definitions,
-            ...NotamsBriefingResponse.definitions
+            ...{
+                "WeatherBriefing": {
+                  "type": "object",
+                  "properties": {
+                    "dateTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "region": {
+                            "$ref": "#/definitions/GFARegion"
+                          },
+                          "weatherGraphs": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/definitions/GFAGraph"
+                            }
+                          },
+                          "iceGraphs": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/definitions/GFAGraph"
+                            }
+                          },
+                          "airmets": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "dateFrom": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "dateTo": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "data": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "dateFrom",
+                                "data"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "sigmets": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "dateFrom": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "dateTo": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "data": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "dateFrom",
+                                "data"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "pireps": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/definitions/PIREPType"
+                            }
+                          }
+                        },
+                        "required": [
+                          "region",
+                          "weatherGraphs",
+                          "iceGraphs",
+                          "airmets",
+                          "sigmets",
+                          "pireps"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "aerodromes": {
+                      "type": "object",
+                      "properties": {
+                        "departure": {
+                          "type": "object",
+                          "properties": {
+                            "dateTimeAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "aerodrome": {
+                              "$ref": "#/definitions/BaseAerodromeBriefingResult"
+                            }
+                          },
+                          "required": [
+                            "dateTimeAt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "legs": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "dateTimeAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "aerodromes": {
+                                "type": "array",
+                                "items": {
+                                  "$ref": "#/definitions/BaseAerodromeBriefingResult"
+                                }
+                              }
+                            },
+                            "required": [
+                              "dateTimeAt",
+                              "aerodromes"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "arrival": {
+                          "type": "object",
+                          "properties": {
+                            "dateTimeAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "aerodrome": {
+                              "$ref": "#/definitions/BaseAerodromeBriefingResult"
+                            }
+                          },
+                          "required": [
+                            "dateTimeAt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "alternates": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/definitions/BaseAerodromeBriefingResult"
+                          }
+                        }
+                      },
+                      "required": [
+                        "departure",
+                        "legs",
+                        "arrival",
+                        "alternates"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "dateTime",
+                    "regions",
+                    "aerodromes"
+                  ],
+                  "additionalProperties": false
+                },
+                "GFARegion": {
+                  "type": "string",
+                  "enum": [
+                    "Pacific (GFACN31)",
+                    "Prairies (GFACN32)",
+                    "Pacific (GFACN33)",
+                    "Ontario & Quebec (GFACN34)",
+                    "Yukon & NWT (GFACN35)",
+                    "Nunavut (GFACN36)",
+                    "Arctic (GFACN37)"
+                  ]
+                },
+                "GFAGraph": {
+                  "type": "object",
+                  "properties": {
+                    "src": {
+                      "type": "string"
+                    },
+                    "validAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "hoursSpan": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "src",
+                    "validAt",
+                    "hoursSpan"
+                  ],
+                  "additionalProperties": false
+                },
+                "PIREPType": {
+                  "type": "object",
+                  "properties": {
+                    "dateFrom": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dateTo": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "data": {
+                      "type": "string"
+                    },
+                    "geometryWarning": {
+                      "type": "boolean"
+                    },
+                    "isUrgent": {
+                      "type": "boolean"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "ftASL": {
+                      "type": "number"
+                    },
+                    "aircraft": {
+                      "type": "string"
+                    },
+                    "clouds": {
+                      "type": "string"
+                    },
+                    "temperature": {
+                      "type": "number"
+                    },
+                    "wind": {
+                      "type": "string"
+                    },
+                    "turbulence": {
+                      "type": "string"
+                    },
+                    "icing": {
+                      "type": "string"
+                    },
+                    "remarks": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "dateFrom",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "BaseAerodromeBriefingResult": {
+                  "type": "object",
+                  "properties": {
+                    "aerodromeCode": {
+                      "type": "string"
+                    },
+                    "nauticalMilesFromTarget": {
+                      "type": "number"
+                    },
+                    "taf": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "string"
+                        },
+                        "dateFrom": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "dateTo": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "flightWithinForecast": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "dateFrom",
+                        "dateTo",
+                        "flightWithinForecast"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "metar": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "string"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "data",
+                          "date"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "aerodromeCode",
+                    "nauticalMilesFromTarget",
+                    "metar"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+            ...{
+                "NOTAMsBriefing": {
+                  "$ref": "#/definitions/NOTAMsPostProcessData"
+                },
+                "NOTAMsPostProcessData": {
+                  "type": "object",
+                  "properties": {
+                    "dateTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "notams": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "aerodromes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "dateTimeAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "flightWithinNotam": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "code",
+                                "dateTimeAt",
+                                "flightWithinNotam"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "data": {
+                            "type": "string"
+                          },
+                          "dateFrom": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "dateTo": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "isAipSuplement": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "aerodromes",
+                          "data",
+                          "dateFrom",
+                          "isAipSuplement"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "dateTime",
+                    "notams"
+                  ],
+                  "additionalProperties": false
+                }
+              }
         },
         config: {
             // Other configuration settings...

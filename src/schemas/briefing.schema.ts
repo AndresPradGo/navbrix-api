@@ -1,8 +1,5 @@
-import path from 'path';
-
 import { z } from "zod";
 import zodToJsonSchema from 'zod-to-json-schema'
-import { createGenerator } from 'ts-json-schema-generator';
 
 import type { BaseAerodromeBriefingResult, NOTAMsPostProcessData } from '../scraper/processor'
 import type { GFAGraph, GFARegion } from '../scraper/scraper'
@@ -115,25 +112,3 @@ export const BriefingRequest = zodToJsonSchema(
     briefingRequestBodySchema, 
     {definitions: { departureArrivalAerodromeSchema,  briefingRequestBaseSchema}}
 )
-
-const repoRoot = process.cwd();
-
-export const WeatherBriefingResponse = {
-    ...(createGenerator({
-        path: path.join(repoRoot, "src", "schemas", "briefing.schema.ts"),
-        tsconfig: path.join(repoRoot, "tsconfig.json"),
-        type: "WeatherBriefing",
-    }).createSchema("WeatherBriefing")), 
-    type: "object",
-    description: "Schema that outlines the weather briefing data to return to the client."
-}
-
-export const NotamsBriefingResponse = {
-    ...(createGenerator({
-        path: path.join(repoRoot, "src", "schemas", "briefing.schema.ts"),
-        tsconfig: path.join(repoRoot, "tsconfig.json"),
-        type: "NOTAMsBriefing",
-    }).createSchema("NOTAMsBriefing")), 
-    type: "object",
-    decription: "Schema that outlines the NOTAMs briefing data to return to the client."
-}
