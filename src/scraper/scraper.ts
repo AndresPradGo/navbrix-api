@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer'
+import type {PuppeteerLaunchOptions} from 'puppeteer'
 import type {Browser, Page} from 'puppeteer'
 import utcDateTime from '../utils/utcDateTime';
 import extractSearchedPerformedDate from '../utils/extractSearchedPerformedDate';
@@ -77,7 +78,14 @@ class Scraper {
     }
 
     async init() {
-        this._browser = await puppeteer.launch({headless: "new", handleSIGINT: false})
+        const options = {
+            args: ['--enable-gpu', '--no-sandbox', '--disable-setuid-sandbox'],
+            headless: "new" as "new", 
+            handleSIGINT: false
+        } as PuppeteerLaunchOptions
+        if(process.env.NODE_ENV === 'production') 
+            options["executablePath"] = "/usr/bin/google-chrome"
+        this._browser = await puppeteer.launch(options)
         this._page = await this._browser.newPage()
         await this._page.setViewport({
             width: 1900,
