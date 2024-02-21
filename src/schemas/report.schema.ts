@@ -45,7 +45,7 @@ const reportRequestBodySchema = z.object ({
     takeoffWeather: aerodromeReportRequestSchema.optional(),
     enrouteWeather: z.array(enrouteReportRequestSchema).optional(),
     landingWeather:  aerodromeReportRequestSchema.optional(),
-}).describe("Schema that outlines the data required to post a new weather report.");
+}).describe('Schema that outlines the data required to post a new weather report. All this data is provided by the NavCraft API "Get Flight" endpoint.');
 
 const reportParamsSquema = z.object({
     flightId: z

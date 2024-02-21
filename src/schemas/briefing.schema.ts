@@ -61,7 +61,7 @@ const briefingRequestBodySchema = z.object ({
     legs: z.array(briefingRequestBaseSchema),
     arrival: departureArrivalAerodromeSchema,
     alternates: briefingRequestBaseSchema,
-}).describe("Schema that outlines the data required to post a new briefing request.")
+}).describe('Schema that outlines the data required to post a new briefing request. All this data is provided by the NavCraft API "Get Flight" endpoint.')
 
 export const briefingRequestSchema = z.object({
     body: briefingRequestBodySchema,

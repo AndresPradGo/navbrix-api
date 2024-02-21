@@ -12,14 +12,13 @@ const addDocumentation = (app: Express, port: number) => {
         info: {
           title: 'NavBrix API',
           version: '1.0.0',
-          description: 'An API that provides official weather forecast and NOTAMs data, from the official Nav Canada website. The data provided by NavBrix API, is meant to be used with flight plans created with the NavCraft API flight planner. NavBrix API can also connect to the NavCraft API database, to update the flight plans’ weather data.'
+          description: 'An API for an improved navigation briefing experience. NavBrix API extends the capabilities of the NavCraft API, enabling it to work with official weather-forecasts and NOTAMs, directly from the Nav Canada website. It connects to the NavCraft API database, and automatically updates the flight plans, using the latest official weather forecast data.'
         },
         externalDocs: {
             description: 'NavCraft API Documentation',
             url: config.get('navcraft_api_url')
 
         },
-        servers: [ { url: 'http://127.0.0.1:3000' } ],
         tags: [
           {
             name: 'Reports',
@@ -31,7 +30,7 @@ const addDocumentation = (app: Express, port: number) => {
             '/api/reports/{flightId}': {
                 post: {
                     summary: 'Post Weather Report',
-                    description: "Creates a weather report with the latest weather forecasts available, and updates the flight data accordingly",
+                    description: 'Creates a weather report with the latest weather forecasts available, and updates the flight data accordingly. The data required to create a report, is provided by the NavCraft API "Get Flight" endpoint.',
                     tags: ["Reports"],
                     parameters: [{
                         name: "flightId",
@@ -72,7 +71,7 @@ const addDocumentation = (app: Express, port: number) => {
             '/api/briefings/weather/{flightId}': {
                 post: {
                     summary: 'Post Weather Briefing',
-                    description: "Creates and return a weather briefing for your flight, using the latest weather forecasts available",
+                    description: 'Creates and return a weather briefing for your flight, using the latest weather forecasts available. The data required to create a briefing, is provided by the NavCraft API "Get Flight" endpoint.',
                     tags: ["Briefings"],
                     parameters: [{
                         name: "flightId",
@@ -113,7 +112,7 @@ const addDocumentation = (app: Express, port: number) => {
             '/api/briefings/notam/{flightId}': {
                 post: {
                     summary: 'Post NOTAMs Briefing',
-                    description: "Creates and return a NOTAMs briefing for your flight",
+                    description: 'Creates and return a NOTAMs briefing for your flight. The data required to create a briefing, is provided by the NavCraft API "Get Flight" endpoint.',
                     tags: ["Briefings"],
                     parameters: [{
                         name: "flightId",
