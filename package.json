@@ -1,11 +1,14 @@
 {
-  "name": "nav-canada-scraper",
+  "name": "navbrix-api",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "dotenv -e .env.development nodemon src/index.ts",
+    "build": "tsc",
+    "migrate": "npx prisma migrate resolve --applied 0_init",
+    "generate-prisma-client": "npx prisma generate",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org andres-pradilla --project navbrix-api ./dist && sentry-cli sourcemaps upload --org andres-pradilla --project navbrix-api ./dist"
   },
   "keywords": [],
@@ -23,14 +26,12 @@
     "jsonwebtoken": "^9.0.2",
     "puppeteer": "^21.6.1",
     "swagger-ui-express": "^5.0.0",
-    "ts-json-schema-generator": "^1.5.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.4"
   },
   "devDependencies": {
     "@types/config": "^3.3.3",
     "@types/cors": "^2.8.17",
-    "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.10.5",

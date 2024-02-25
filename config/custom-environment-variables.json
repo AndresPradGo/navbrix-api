@@ -1,4 +1,6 @@
 {
     "jwt_secret_key": "NAVBRIX_API_JWT_SECRET_KEY",
-    "jwt_algorithm": "NAVBRIX_API_JWT_ALGORITHM"
+    "jwt_algorithm": "NAVBRIX_API_JWT_ALGORITHM",
+    "PORT": "NAVBRIX_API_PORT",
+    "navcraft_api_url": "NAVBRIX_API_NAVCRAFT_API_URL"
 }
