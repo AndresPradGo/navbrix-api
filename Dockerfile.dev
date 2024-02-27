@@ -1,0 +1,38 @@
+FROM node:20.10-bookworm-slim
+RUN npm install -g ts-node
+
+# Set working directory
+WORKDIR /app
+
+# Download the proper browser for Puppeteer to work on Debian
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+RUN apt-get update -y && apt-get install curl gnupg -y \
+    && curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+    && apt-get update -y \
+    && apt-get install google-chrome-stable -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instal depnedencies
+COPY package*.json .
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Install openssl
+RUN apt-get update -y && apt-get install -y openssl
+
+# Expose port
+EXPOSE 3000
+
+# Add environment variables
+ENV DATABASE_URL="" \
+    NAVBRIX_API_PORT=3000 \ 
+    NAVBRIX_API_NAVCRAFT_API_URL="" \
+    NAVBRIX_API_JWT_ALGORITHM="" \
+    NAVBRIX_API_JWT_SECRET_KEY=""
+
+# Generate prisma client and run the application
+RUN npm run generate-prisma-client
+CMD ["npm", "run", "dev"]
