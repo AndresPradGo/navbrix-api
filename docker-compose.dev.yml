@@ -46,6 +46,7 @@ services:
       NAVCRAFT_API_MASTER_USER_PASSWORD: masterUserPassword1 # At least one uppercase and one number
       NAVCRAFT_API_JWT_SECRET_KEY: RandomStringForJWTkey #  Must be the same in both APIs. Random long strings are preferred
       NAVCRAFT_API_JWT_ALGORITHM: HS256 #  Must be the same in both APIs. Change it if you prefer a different algorithm, but HS256 works fine
+      NAVCRAFT_API_SENTRY_DSN: "" # The app will run without the DSN, but if you want to track your app's performance with sentry, you need to create a sentry project and add your DSN here.
   
   # ------------------------------------------- || -------------------------------------------
 
@@ -65,6 +66,7 @@ services:
       NAVBRIX_API_NAVCRAFT_API_URL: http://127.0.0.1:8000/docs
       NAVBRIX_API_JWT_SECRET_KEY: RandomStringForJWTkey #  Must be the same in both APIs. Random long strings are preferred
       NAVBRIX_API_JWT_ALGORITHM: HS256 #  Must be the same in both APIs. Change it if you prefer a different algorithm, but HS256 works fine
+      NAVBRIX_API_SENTRY_DSN: "" # The app will run without the DSN, but if you want to track your app's performance with sentry, you need to create a sentry project and add your DSN here.
     depends_on:
       database:
         condition: service_healthy

@@ -1,11 +1,13 @@
 import * as Sentry from "@sentry/node";
 import { ProfilingIntegration } from "@sentry/profiling-node";
 import type {Express} from 'express'
+import config from 'config'
 
 
 const addRequestHandler = (app: Express) => {
+    const sentry_dsn: string | undefined = config.get('sentry_dsn') as string | undefined
     Sentry.init({
-        dsn: "https://e8931349729c17847cfab47e43e08d6e@o1258167.ingest.sentry.io/4506713665110016",
+        dsn: sentry_dsn,
         integrations: [
           // enable HTTP calls tracing
           new Sentry.Integrations.Http({ tracing: true }),

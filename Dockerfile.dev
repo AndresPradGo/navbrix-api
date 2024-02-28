@@ -31,7 +31,8 @@ ENV DATABASE_URL="" \
     NAVBRIX_API_PORT=3000 \ 
     NAVBRIX_API_NAVCRAFT_API_URL="" \
     NAVBRIX_API_JWT_ALGORITHM="" \
-    NAVBRIX_API_JWT_SECRET_KEY=""
+    NAVBRIX_API_JWT_SECRET_KEY="" \
+    NAVBRIX_API_SENTRY_DSN=""
 
 # Generate prisma client and run the application
 RUN npm run generate-prisma-client

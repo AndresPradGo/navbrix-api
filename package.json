@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
+    "build": "tsc && npm run sentry:sourcemaps",
     "migrate": "npx prisma migrate resolve --applied 0_init",
     "generate-prisma-client": "npx prisma generate",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org andres-pradilla --project navbrix-api ./dist && sentry-cli sourcemaps upload --org andres-pradilla --project navbrix-api ./dist"
