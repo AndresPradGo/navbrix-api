@@ -12,17 +12,12 @@ const addDocumentation = (app: Express, port: number) => {
         info: {
           title: 'NavBrix API',
           version: '1.0.0',
-          description: 'An API for an improved navigation briefing experience. NavBrix API extends the capabilities of the NavCraft API, enabling it to work with official weather-forecasts and NOTAMs, directly from the Nav Canada website. It connects to the NavCraft API database, and automatically updates the flight plans, using the latest official weather forecast data.'
-        },
-        externalDocs: {
-            description: 'NavCraft API Documentation',
-            url: config.get('navcraft_api_url')
-
+          description: `An API for an improved navigation briefing experience. NavBrix API extends the capabilities of the [NavCraft API](${config.get('navcraft_api_url')}), enabling it to work with official weather forecasts and NOTAMs directly from the Nav Canada weather briefing web tool [CFPS](https://plan.navcanada.ca/wxrecall/). \n \n - It connects to the NavCraft API's database, and automatically updates the flight plans, using the latest official weather forecast. \n \n - It provides departure, arrival, enroute, and alternates weather and NOTAM briefings.`
         },
         tags: [
           {
             name: 'Reports',
-            description: 'containing the weather data required by the NavCraft API, to make flight plan calculations.'
+            description: 'that contain the weather data required by the NavCraft API to make flight plan calculations.'
           },
           { name: 'Briefings' }
         ],
