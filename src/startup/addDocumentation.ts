@@ -6,13 +6,13 @@ import { ReportRequest, ReportResponse } from '../schemas/report.schema';
 import { BriefingRequest } from '../schemas/briefing.schema';
 
 const addDocumentation = (app: Express, port: number) => {
-    
+
     const specs = {
         openapi: '3.1.0',
         info: {
           title: 'NavBrix API',
           version: '1.0.0',
-          description: `An API for an improved navigation briefing experience. NavBrix API extends the capabilities of the [NavCraft API](${config.get('navcraft_api_url')}), enabling it to work with official weather forecasts and NOTAMs directly from the Nav Canada weather briefing web tool [CFPS](https://plan.navcanada.ca/wxrecall/). \n \n - It connects to the NavCraft API's database, and automatically updates the flight plans, using the latest official weather forecast. \n \n - It provides departure, arrival, enroute, and alternates weather and NOTAM briefings.`
+          description: `Improving the navigation briefing experience. NavBrix API enables [NavCraft API](${config.get('navcraft_api_url')}) to work with weather forecasts and NOTAMs, from the Nav Canada weather briefing web app [CFPS](https://plan.navcanada.ca/wxrecall/). \n \n - It connects to the NavCraft API's database and updates the flight plans' weather. \n \n - It provides departure, arrival, enroute and alternate weather and NOTAM briefings`
         },
         tags: [
           {
@@ -588,10 +588,12 @@ const addDocumentation = (app: Express, port: number) => {
     }
 
     const options = {
-        customSiteTitle: "NavBrix API - Swagger UI",
+        customSiteTitle: "NavBrix API | Docs",
+        customfavIcon: "/logo.png",
+        customCss: ".swagger-ui .topbar { max-height: 0px !important; padding: 0px !important; overflow: hidden;}"
       };
 
-    app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, options));
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, options, undefined, undefined, "public/logo.png"));
 }
 
 
