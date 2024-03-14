@@ -122,7 +122,8 @@ Helpful resources:
 
 If you would like to work on any of the contributions mentioned above, follow the steps below.
 
-> NOTE: To run the code locally in development mode, you'll need to have [<img src="https://camo.githubusercontent.com/54c64e3f853121efbd21369ff4f07451209d3fbd4b18676ca4e0c6517f213476/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f2d446f636b65722d626c61636b3f7374796c653d666f722d7468652d6261646765266c6f676f436f6c6f723d7768697465266c6f676f3d646f636b657226636f6c6f723d303034454132" alt="Docker" data-canonical-src="https://img.shields.io/badge/-Docker-black?style=for-the-badge&amp;logoColor=white&amp;logo=docker&amp;color=004EA2" align="center" style="max-width: 100%; margin: 0 5px 0;">](https://docs.docker.com/get-docker/) installed on your machine.
+> [!IMPORTANT]
+> To run the code locally in development mode, you'll need to have [<img src="https://camo.githubusercontent.com/54c64e3f853121efbd21369ff4f07451209d3fbd4b18676ca4e0c6517f213476/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f2d446f636b65722d626c61636b3f7374796c653d666f722d7468652d6261646765266c6f676f436f6c6f723d7768697465266c6f676f3d646f636b657226636f6c6f723d303034454132" alt="Docker" data-canonical-src="https://img.shields.io/badge/-Docker-black?style=for-the-badge&amp;logoColor=white&amp;logo=docker&amp;color=004EA2" align="center" style="max-width: 100%; margin: 0 5px 0;">](https://docs.docker.com/get-docker/) installed on your machine.
 
 ### 0. Read the Open Source Guide 📑
 
@@ -214,7 +215,8 @@ Once you've created a new feature branch, you can start working on the code. The
   http://127.0.0.1:3000
   ```
 
-> NOTE: The `/src` directory in the host, is being mapped to the `/src` directory in the container. Thus, any changes you save will be automatically shared to the container. However, the `package.json` and `package-lock.json` files are not being mapped. If you install a new library, you'll need to rebuild the image for it to show in the container.
+> [!TIP]
+> The `/src` directory in the host, is being mapped to the `/src` directory in the container. Thus, any changes you save will be automatically shared to the container. However, the `package.json` and `package-lock.json` files are not being mapped. If you install a new library, you'll need to rebuild the image for it to show in the container.
 
 ### 4. Submit a pull request <img align="center" alt="GitHub" width="36px" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg" style="max-width: 100%; margin: 0; padding: 0 0 1px; background: #FFF;border-radius: 50px"/>
 
