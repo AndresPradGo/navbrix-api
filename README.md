@@ -1,4 +1,4 @@
-[![NavCraft API](/public/title.png)](https://navbrixapi.com/docs)
+[![NavBrix API](/public/title.png)](https://navbrixapi.com/docs)
 
 _<center>_
 
@@ -8,7 +8,7 @@ _<center>_
 
 </center>
 
-NavBrix API enables [NavCraft API](https://navcraftapi.com/docs) to work with weather forecasts and NOTAMs, from the Nav Canada weather briefing web app [CFPS](https://plan.navcanada.ca/wxrecall/).
+NavBrix API enables [NavCraft API](https://github.com/AndresPradGo/navcraft-api) to work with weather forecasts and NOTAMs, from the Nav Canada weather briefing web app [CFPS](https://plan.navcanada.ca/wxrecall/).
 
 - It connects to the NavCraft API's database and updates the flight plans' weather.
 
@@ -20,7 +20,7 @@ NavBrix API was developed with one goal:
 
 > Make the NavCraft API immune to weather changes.
 
-[NavCraft API](https://navcraftapi.com/docs) makes the long and stressful task of flight planning, effortless. However, every time the weather changes, my flight plans break. Expecting a pilot to update the weather and NOTAM briefings and the departure, arrival and enroute weather data every time the weather changes, is unrealistic.
+NavCraft API makes the long and stressful task of flight planning, effortless. However, every time the weather changes, my flight plans break. Expecting a pilot to update the weather and NOTAM briefings and the departure, arrival and enroute weather data every time the weather changes, is unrealistic.
 
 With NavBrix API, pilots don’t need to worry about outdated flight plan weather data.
 
