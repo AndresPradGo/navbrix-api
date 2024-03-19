@@ -16,7 +16,7 @@ NavBrix API enables [NavCraft API](https://github.com/AndresPradGo/navcraft-api)
 
 # <a id="motivation"></a> 🌟 Motivation
 
-NavBrix API was developed with one goal:
+NavBrix API was developed to achieve one goal:
 
 > Make the NavCraft API immune to weather changes.
 
